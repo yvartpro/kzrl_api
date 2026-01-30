@@ -31,7 +31,7 @@ app.use("/kzrl/", express.static("public"))
 // Routes
 app.use('/kzrl/api', apiRoutes);
 // catch all
-app.get('/kzrl/*', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'index.html')) });
+app.get('/kzrl/*splat', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'index.html')) });
 
 // Error Handler
 app.use((err, req, res, next) => {
