@@ -47,7 +47,13 @@ const ProductController = {
       if (supplierId !== undefined) updates.SupplierId = supplierId;
       if (boxQuantity !== undefined) updates.boxQuantity = boxQuantity;
       if (unitsPerBox !== undefined) updates.unitsPerBox = unitsPerBox;
-      if (unitCost !== undefined) updates.unitCost = unitCost;
+
+      // Calculate purchasePrice from unitCost if provided
+      if (unitCost !== undefined) {
+        const conversion = unitsPerBox !== undefined ? unitsPerBox : product.unitsPerBox;
+        updates.purchasePrice = parseFloat(unitCost) * parseFloat(conversion);
+      }
+
       if (sellingPrice !== undefined) updates.sellingPrice = sellingPrice;
 
       await product.update(updates);
