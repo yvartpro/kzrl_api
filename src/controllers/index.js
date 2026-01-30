@@ -254,6 +254,13 @@ const ReportController = {
       console.error('Stock health error:', error);
       res.status(500).json({ error: error.message });
     }
+  },
+
+  async getGlobalCapital(req, res) {
+    try {
+      const capital = await ReportService.getGlobalCapital();
+      res.json(capital);
+    } catch (e) { res.status(500).json({ error: e.message }); }
   }
 };
 

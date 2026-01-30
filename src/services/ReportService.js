@@ -210,6 +210,32 @@ class ReportService {
       currentPage: parseInt(page)
     };
   }
+
+  /**
+   * Get Global Capital (Cash + Stock Valuation)
+   */
+  static async getGlobalCapital() {
+    const CashService = require('./CashService');
+    const liquidAssets = await CashService.getBalance();
+
+    // Calculate stock valuation (Cost Basis)
+    const products = await Product.findAll();
+    let stockValue = 0;
+
+    for (const product of products) {
+      const stock = await Stock.findOne({ where: { ProductId: product.id } });
+      if (stock && stock.quantity > 0) {
+        const unitCost = product.purchasePrice / product.unitsPerBox || 0;
+        stockValue += stock.quantity * unitCost;
+      }
+    }
+
+    return {
+      liquidAssets,
+      stockValue,
+      globalCapital: liquidAssets + stockValue
+    };
+  }
 }
 
 module.exports = ReportService;

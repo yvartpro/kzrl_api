@@ -55,6 +55,7 @@ router.get('/reports/daily', authorize('ADMIN', 'MANAGER'), ReportController.get
 router.get('/reports/journal', authorize('ADMIN', 'MANAGER'), ReportController.getJournal);
 router.get('/reports/stock-value', authorize('ADMIN', 'MANAGER'), ReportController.getStockValue);
 router.get('/reports/stock-health', authorize('ADMIN', 'MANAGER'), ReportController.getStockHealth);
+router.get('/reports/global-capital', authorize('ADMIN', 'MANAGER'), ReportController.getGlobalCapital);
 
 // User Management (Admin Only)
 router.get('/users', authorize('ADMIN'), UserController.listUsers);
