@@ -34,23 +34,23 @@ const ProductController = {
   async updateProduct(req, res) {
     try {
       const { id } = req.params;
-      const { name, categoryId, supplierId, boxQuantity, unitsPerBox, unitCost, sellingPrice } = req.body;
+      const { name, categoryId, supplierId, boxQuantity, unitsPerBox, unitCost, purchasePrice, sellingPrice } = req.body;
 
       const product = await Product.findByPk(id);
       if (!product) {
         return res.status(404).json({ error: 'Product not found' });
       }
 
-      // Update only provided fields
       const updates = {};
       if (name !== undefined) updates.name = name;
       if (categoryId !== undefined) updates.CategoryId = categoryId;
       if (supplierId !== undefined) updates.SupplierId = supplierId;
       if (boxQuantity !== undefined) updates.boxQuantity = boxQuantity;
       if (unitsPerBox !== undefined) updates.unitsPerBox = unitsPerBox;
+      if (purchasePrice !== undefined) updates.purchasePrice = purchasePrice;
 
-      // Calculate purchasePrice from unitCost if provided
-      if (unitCost !== undefined) {
+      // Also allow updating via unitCost for backward compatibility or alternative logic
+      if (unitCost !== undefined && purchasePrice === undefined) {
         const conversion = unitsPerBox !== undefined ? unitsPerBox : product.unitsPerBox;
         updates.purchasePrice = parseFloat(unitCost) * parseFloat(conversion);
       }
