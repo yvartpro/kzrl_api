@@ -30,7 +30,7 @@ router.post('/categories', simpleCrud(Category).create);
 
 // Suppliers
 router.get('/suppliers', simpleCrud(Supplier).list);
-router.post('/suppliers', simpleCrud(Supplier).create);
+router.post('/suppliers', authorize('ADMIN', 'MANAGER'), simpleCrud(Supplier).create);
 
 // Stock Management
 router.post('/stock/adjust', StockController.adjust);
@@ -57,16 +57,16 @@ router.get('/reports/stock-value', authorize('ADMIN', 'MANAGER'), ReportControll
 router.get('/reports/stock-health', authorize('ADMIN', 'MANAGER'), ReportController.getStockHealth);
 router.get('/reports/global-capital', authorize('ADMIN', 'MANAGER'), ReportController.getGlobalCapital);
 
-// User Management (Admin Only)
-router.get('/users', authorize('ADMIN'), UserController.listUsers);
-router.post('/users', authorize('ADMIN'), UserController.createUser);
-router.patch('/users/:id', authorize('ADMIN'), UserController.updateUser);
+// User Management
+router.get('/users', authorize('ADMIN', 'MANAGER'), UserController.listUsers);
+router.post('/users', authorize('ADMIN', 'MANAGER'), UserController.createUser);
+router.patch('/users/:id', authorize('ADMIN', 'MANAGER'), UserController.updateUser);
 router.patch('/users/:id/toggle', authorize('ADMIN'), UserController.toggleUserStatus);
-router.get('/roles', authorize('ADMIN'), UserController.listRoles);
+router.get('/roles', authorize('ADMIN', 'MANAGER'), UserController.listRoles);
 
 // System Initialization
 router.post('/system/initialize-cash', authorize('ADMIN'), SystemController.initializeCash);
-router.post('/system/initialize-stock', authorize('ADMIN', 'MANAGER'), SystemController.initializeStock);
+router.post('/system/initialize-stock', authorize('ADMIN'), SystemController.initializeStock);
 router.post('/system/pay-staff', authorize('ADMIN', 'MANAGER'), SystemController.payStaff);
 
 module.exports = router;

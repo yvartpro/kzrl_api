@@ -10,7 +10,7 @@ class AuthService {
    * Login user and return JWT
    */
   static async login(username, password) {
-    const user = await User.findOne({ 
+    const user = await User.findOne({
       where: { username, isActive: true },
       include: [Role]
     });
@@ -19,18 +19,22 @@ class AuthService {
       throw new Error('Utilisateur non trouvé ou inactif');
     }
 
+    if (user.Role?.name === 'WAITER') {
+      throw new Error('Les serveurs n\'ont pas accès au tableau de bord');
+    }
+
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
     if (!isPasswordValid) {
       throw new Error('Mot de passe incorrect');
     }
 
     const token = jwt.sign(
-      { 
-        id: user.id, 
-        username: user.username, 
-        role: user.Role?.name 
-      }, 
-      JWT_SECRET, 
+      {
+        id: user.id,
+        username: user.username,
+        role: user.Role?.name
+      },
+      JWT_SECRET,
       { expiresIn: JWT_EXPIRES_IN }
     );
 

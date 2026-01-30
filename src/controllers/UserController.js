@@ -33,10 +33,19 @@ const UserController = {
 
       const passwordHash = await AuthService.hashPassword(password);
 
+      const requesterRole = req.user.role;
+      let finalRoleId = roleId;
+
+      if (requesterRole === 'MANAGER') {
+        const waiterRole = await Role.findOne({ where: { name: 'WAITER' } });
+        if (!waiterRole) throw new Error('Rôle WAITER non trouvé');
+        finalRoleId = waiterRole.id;
+      }
+
       const user = await User.create({
         username,
         passwordHash,
-        RoleId: roleId,
+        RoleId: finalRoleId,
         isActive: true,
         salary: req.body.salary || 0
       });
@@ -102,7 +111,13 @@ const UserController = {
    */
   async listRoles(req, res) {
     try {
-      const roles = await Role.findAll();
+      const requesterRole = req.user.role;
+      let roles;
+      if (requesterRole === 'MANAGER') {
+        roles = await Role.findAll({ where: { name: 'WAITER' } });
+      } else {
+        roles = await Role.findAll();
+      }
       res.json(roles);
     } catch (e) {
       res.status(500).json({ error: e.message });
@@ -123,10 +138,19 @@ const UserController = {
       }
 
       const updates = {};
-      if (username !== undefined) updates.username = username;
-      if (roleId !== undefined) updates.RoleId = roleId;
-      if (salary !== undefined) updates.salary = salary;
-      if (isActive !== undefined) updates.isActive = isActive;
+      const requesterRole = req.user.role;
+
+      if (requesterRole === 'MANAGER') {
+        // Manager can ONLY update salary
+        if (salary !== undefined) updates.salary = salary;
+        // Ignore other fields
+      } else {
+        // Admin can update everything
+        if (username !== undefined) updates.username = username;
+        if (roleId !== undefined) updates.RoleId = roleId;
+        if (salary !== undefined) updates.salary = salary;
+        if (isActive !== undefined) updates.isActive = isActive;
+      }
 
       await user.update(updates);
 
