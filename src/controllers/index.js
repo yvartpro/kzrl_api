@@ -1,5 +1,6 @@
 const express = require('express');
 const StockService = require('../services/StockService');
+const CashService = require('../services/CashService');
 const PurchaseService = require('../services/PurchaseService');
 const SaleService = require('../services/SaleService');
 const ReportService = require('../services/ReportService');
