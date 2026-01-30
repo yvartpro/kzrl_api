@@ -178,7 +178,8 @@ const ReportController = {
   },
   async getStockValue(req, res) {
     try {
-      const report = await ReportService.getStockValuation();
+      const date = req.query.date ? new Date(req.query.date) : new Date();
+      const report = await ReportService.getStockValuation(date);
       res.json(report);
     } catch (e) { res.status(500).json({ error: e.message }); }
   },

@@ -52,39 +52,69 @@ class ReportService {
   }
 
   /**
-   * Get Current Stock Valuation
+   * Get Current Stock Valuation for a specific date
    */
-  static async getStockValuation() {
-    const stocks = await Stock.findAll({
-      include: [Product]
-    });
+  static async getStockValuation(date = new Date()) {
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const products = await Product.findAll();
 
     let totalValuation = 0;
     let totalPotentialRevenue = 0;
 
-    const details = stocks.map(stock => {
-      const unitCost = stock.Product.purchasePrice / stock.Product.unitsPerBox;
-      const unitValue = stock.Product.sellingPrice;
+    const items = [];
 
-      const costValue = stock.quantity * unitCost;
-      const salesValue = stock.quantity * unitValue;
+    for (const product of products) {
+      // Find the last stock movement for this product before endOfDay
+      const stock = await Stock.findOne({ where: { ProductId: product.id } });
+      let quantity = 0;
+
+      if (stock) {
+        // Find latest movement before or on the target date
+        const lastMovement = await StockMovement.findOne({
+          where: {
+            StockId: stock.id,
+            createdAt: { [Op.lte]: endOfDay }
+          },
+          order: [['createdAt', 'DESC']]
+        });
+
+        if (lastMovement) {
+          quantity = lastMovement.newQuantity;
+        } else {
+          // If no movement yet, check if stock was created before endOfDay
+          if (stock.createdAt > endOfDay) {
+            continue; // Product didn't exist yet
+          }
+          quantity = 0; // Existed but no movements
+        }
+      }
+
+      const unitCost = product.purchasePrice / product.unitsPerBox || 0;
+      const unitValue = product.sellingPrice || 0;
+
+      const costValue = quantity * unitCost;
+      const salesValue = quantity * unitValue;
 
       totalValuation += costValue;
       totalPotentialRevenue += salesValue;
 
-      return {
-        product: stock.Product.name,
-        quantity: stock.quantity,
+      items.push({
+        productId: product.id,
+        productName: product.name,
+        quantity,
         unitCost,
-        totalCostValue: costValue,
+        totalValue: costValue,
         potentialRevenue: salesValue
-      };
-    });
+      });
+    }
 
     return {
-      totalValuation,
+      totalValue: totalValuation,
       totalPotentialRevenue,
-      details
+      date: endOfDay,
+      items
     };
   }
 }
