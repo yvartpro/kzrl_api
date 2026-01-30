@@ -27,10 +27,11 @@ app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json());
 app.use("/kzrl/", express.static("public"))
-app.get('/kzrl/*', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'index.html')) });
 
 // Routes
 app.use('/kzrl/api', apiRoutes);
+// catch all
+app.get('/kzrl/*', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'index.html')) });
 
 // Error Handler
 app.use((err, req, res, next) => {
