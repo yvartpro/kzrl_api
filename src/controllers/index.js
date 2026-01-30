@@ -4,6 +4,7 @@ const PurchaseService = require('../services/PurchaseService');
 const SaleService = require('../services/SaleService');
 const ReportService = require('../services/ReportService');
 const AuthService = require('../services/AuthService');
+const UserController = require('./UserController');
 const { Product, Category, Stock, Supplier, Sale, Purchase } = require('../models');
 
 // Breaking down into sub-controllers or keeping simple dependent on size
@@ -281,5 +282,6 @@ module.exports = {
   PurchaseController,
   SaleController,
   ReportController,
-  AuthController
+  AuthController,
+  UserController
 };

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { ProductController, PurchaseController, SaleController, ReportController, AuthController } = require('../controllers');
+const { ProductController, PurchaseController, SaleController, ReportController, AuthController, UserController } = require('../controllers');
 const CashController = require('../controllers/CashController');
 const StockController = require('../controllers/StockController');
 const { Category, Supplier } = require('../models');
@@ -15,6 +15,7 @@ const simpleCrud = (Model) => ({
 // Auth Routes
 router.post('/auth/login', AuthController.login);
 router.get('/auth/me', authenticate, AuthController.me);
+router.post('/auth/change-password', authenticate, UserController.changePassword);
 
 // Protected Routes
 router.use(authenticate);
@@ -54,5 +55,11 @@ router.get('/reports/daily', authorize('ADMIN', 'MANAGER'), ReportController.get
 router.get('/reports/journal', authorize('ADMIN', 'MANAGER'), ReportController.getJournal);
 router.get('/reports/stock-value', authorize('ADMIN', 'MANAGER'), ReportController.getStockValue);
 router.get('/reports/stock-health', authorize('ADMIN', 'MANAGER'), ReportController.getStockHealth);
+
+// User Management (Admin Only)
+router.get('/users', authorize('ADMIN'), UserController.listUsers);
+router.post('/users', authorize('ADMIN'), UserController.createUser);
+router.patch('/users/:id/toggle', authorize('ADMIN'), UserController.toggleUserStatus);
+router.get('/roles', authorize('ADMIN'), UserController.listRoles);
 
 module.exports = router;
