@@ -12,6 +12,9 @@ const Category = sequelize.define('Category', {
     allowNull: false,
     unique: true,
   },
+}, {
+  timestamps: true,
+  tableName: 'kzrl_categories'
 });
 
 const Product = sequelize.define('Product', {
@@ -57,6 +60,8 @@ const Product = sequelize.define('Product', {
     allowNull: false,
     comment: 'Price of one baseUnit (e.g. Price of a Bottle)',
   },
+}, {
+  tableName: 'kzrl_products'
 });
 
 module.exports = { Category, Product };

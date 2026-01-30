@@ -14,6 +14,8 @@ const Supplier = sequelize.define('Supplier', {
   contact: {
     type: DataTypes.STRING,
   },
+}, {
+  tableName: 'kzrl_suppliers'
 });
 
 const Purchase = sequelize.define('Purchase', {
@@ -33,6 +35,8 @@ const Purchase = sequelize.define('Purchase', {
   notes: {
     type: DataTypes.TEXT,
   }
+}, {
+  tableName: 'kzrl_purchases'
 });
 
 const PurchaseItem = sequelize.define('PurchaseItem', {
@@ -56,6 +60,8 @@ const PurchaseItem = sequelize.define('PurchaseItem', {
     type: DataTypes.DECIMAL(10, 2),
     allowNull: false,
   },
+}, {
+  tableName: 'kzrl_purchase_items'
 });
 
 module.exports = { Supplier, Purchase, PurchaseItem };

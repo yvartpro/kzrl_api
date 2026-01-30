@@ -12,6 +12,8 @@ const Role = sequelize.define('Role', {
     allowNull: false,
     unique: true, // e.g., 'ADMIN', 'MANAGER', 'WAITER'
   },
+}, {
+  tableName: 'kzrl_roles'
 });
 
 const User = sequelize.define('User', {
@@ -33,6 +35,8 @@ const User = sequelize.define('User', {
     type: DataTypes.BOOLEAN,
     defaultValue: true,
   }
+}, {
+  tableName: 'kzrl_users'
 });
 
 // Associations will be defined centrally later, but can be hinted here.

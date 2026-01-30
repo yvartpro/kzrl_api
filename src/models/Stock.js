@@ -15,6 +15,8 @@ const Stock = sequelize.define('Stock', {
     comment: 'Current stock in BASE UNITS',
   },
   // Optional: location (if multiple warehouses, though bar is usually single)
+}, {
+  tableName: 'kzrl_stocks'
 });
 
 const StockMovement = sequelize.define('StockMovement', {
@@ -55,6 +57,8 @@ const StockMovement = sequelize.define('StockMovement', {
     allowNull: true,
     comment: 'ID of the Purchase or Sale that caused this movement',
   }
+}, {
+  tableName: 'kzrl_stock_movements'
 });
 
 module.exports = { Stock, StockMovement };

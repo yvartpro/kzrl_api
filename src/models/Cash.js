@@ -11,6 +11,8 @@ const CashRegister = sequelize.define('CashRegister', {
     type: DataTypes.DECIMAL(10, 2),
     defaultValue: 0.00,
   }
+}, {
+  tableName: 'kzrl_cash_registers'
 });
 
 const CashMovement = sequelize.define('CashMovement', {
@@ -33,6 +35,8 @@ const CashMovement = sequelize.define('CashMovement', {
   referenceId: {
     type: DataTypes.UUID, // Link to Sale or Expense
   }
+}, {
+  tableName: 'kzrl_cash_movements'
 });
 
 const Expense = sequelize.define('Expense', {
@@ -53,6 +57,8 @@ const Expense = sequelize.define('Expense', {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW,
   },
+}, {
+  tableName: 'kzrl_expenses'
 });
 
 module.exports = { CashRegister, CashMovement, Expense };

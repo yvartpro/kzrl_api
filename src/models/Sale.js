@@ -19,6 +19,8 @@ const Sale = sequelize.define('Sale', {
     type: DataTypes.DECIMAL(10, 2),
     allowNull: false,
   },
+}, {
+  tableName: 'kzrl_sales'
 });
 
 const SaleItem = sequelize.define('SaleItem', {
@@ -48,6 +50,8 @@ const SaleItem = sequelize.define('SaleItem', {
     allowNull: false,
     comment: 'Calculated Cost per Unit at time of sale (for profit reports)',
   }
+}, {
+  tableName: 'kzrl_sale_items'
 });
 
 module.exports = { Sale, SaleItem };
