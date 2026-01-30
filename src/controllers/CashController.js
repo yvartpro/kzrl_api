@@ -15,7 +15,7 @@ const CashController = {
     try {
       const { startDate, endDate } = req.query;
       const start = startDate ? new Date(startDate) : new Date(new Date().setHours(0, 0, 0, 0));
-      const end = endDate ? new Date(endDate) : new Date(new Date().setHours(23, 59, 59, 999));
+      const end = endDate ? new Date(`${endDate}T23:59:59.999Z`) : new Date(new Date().setHours(23, 59, 59, 999));
 
       const movements = await CashService.getMovements(start, end);
       res.json(movements);
@@ -57,7 +57,7 @@ const CashController = {
       if (startDate || endDate) {
         where.createdAt = {};
         if (startDate) where.createdAt[Op.gte] = new Date(startDate);
-        if (endDate) where.createdAt[Op.lte] = new Date(endDate);
+        if (endDate) where.createdAt[Op.lte] = new Date(`${endDate}T23:59:59.999Z`);
       }
 
       const expenses = await Expense.findAll({
