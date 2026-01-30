@@ -67,7 +67,6 @@ const CashController = {
 
       res.json(expenses);
     } catch (e) {
-      console.error('Get expenses error:', e);
       res.status(500).json({ error: e.message });
     }
   }

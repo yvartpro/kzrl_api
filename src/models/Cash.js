@@ -13,7 +13,7 @@ const CashMovement = sequelize.define('CashMovement', {
   type: { type: DataTypes.ENUM('IN', 'OUT'), allowNull: false, },
   amount: { type: DataTypes.DECIMAL(10, 2), allowNull: false, },
   reason: { type: DataTypes.STRING, },
-  referenceId: { type: DataTypes.UUID, }, // Link to Sale or Expense
+  referenceId: { type: DataTypes.UUID, },
 }, {
   tableName: 'kzrl_cash_movements'
 });

@@ -15,34 +15,34 @@ const StockController = {
       // Validation
       if (!productId || quantity === undefined || !reason) {
         return res.status(400).json({
-          error: 'Missing required fields: productId, quantity, reason'
+          error: 'Champs requis manquants: productId, quantity, reason'
         });
       }
 
       const validReasons = ['LOSS', 'FREE', 'ADJUSTMENT'];
       if (!validReasons.includes(reason)) {
         return res.status(400).json({
-          error: `Invalid reason. Must be one of: ${validReasons.join(', ')}`
+          error: `Raison invalide. Doit être l'un des : ${validReasons.join(', ')}`
         });
       }
 
       // Check if product exists
       const product = await Product.findByPk(productId);
       if (!product) {
-        return res.status(404).json({ error: 'Product not found' });
+        return res.status(404).json({ error: 'Produit non trouvé' });
       }
 
       // Get current stock
       const stock = await Stock.findOne({ where: { ProductId: productId } });
       if (!stock) {
-        return res.status(404).json({ error: 'Stock record not found for this product' });
+        return res.status(404).json({ error: 'Enregistrement du stock non trouvé pour le produit' });
       }
 
       // Check if adjustment would result in negative stock
       const newQuantity = stock.quantity + quantity;
       if (newQuantity < 0) {
         return res.status(400).json({
-          error: `Insufficient stock. Current: ${stock.quantity}, Adjustment: ${quantity}`
+          error: `Stock insuffisant. Actuel: ${stock.quantity}, Ajustement: ${quantity}`
         });
       }
 
@@ -57,12 +57,11 @@ const StockController = {
       );
 
       res.status(200).json({
-        message: 'Stock adjusted successfully',
+        message: 'Stock ajusté avec succès',
         movement,
         newQuantity
       });
     } catch (e) {
-      console.error('Stock adjustment error:', e);
       res.status(500).json({ error: e.message });
     }
   },
@@ -77,7 +76,6 @@ const StockController = {
       const movements = await StockService.getStockMovements(productId);
       res.json(movements);
     } catch (e) {
-      console.error('Get movements error:', e);
       res.status(500).json({ error: e.message });
     }
   }

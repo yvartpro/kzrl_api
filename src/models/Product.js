@@ -14,12 +14,12 @@ const Product = sequelize.define('Product', {
   name: { type: DataTypes.STRING, allowNull: false, },
   description: { type: DataTypes.TEXT, },
   // Unit Logic
-  purchaseUnit: { type: DataTypes.ENUM('BOX', 'UNIT'), defaultValue: 'BOX', allowNull: false, comment: 'The unit used when purchasing from supplier', },
-  baseUnit: { type: DataTypes.ENUM('UNIT'), defaultValue: 'UNIT', allowNull: false, comment: 'The smallest sellable unit', },
-  unitsPerBox: { type: DataTypes.INTEGER, defaultValue: 1, allowNull: false, comment: 'Conversion factor: How many units in a box', },
+  purchaseUnit: { type: DataTypes.ENUM('BOX', 'UNIT'), defaultValue: 'BOX', allowNull: false, comment: 'L\'unité utilisée lors de l\'achat auprès du fournisseur', },
+  baseUnit: { type: DataTypes.ENUM('UNIT'), defaultValue: 'UNIT', allowNull: false, comment: 'La plus petite unité vendable', },
+  unitsPerBox: { type: DataTypes.INTEGER, defaultValue: 1, allowNull: false, comment: 'Facteur de conversion: Combien d\'unités dans une boîte', },
   // Pricing
-  purchasePrice: { type: DataTypes.DECIMAL(10, 2), allowNull: false, comment: 'Cost of one purchaseUnit (e.g. Price of a Box)', },
-  sellingPrice: { type: DataTypes.DECIMAL(10, 2), allowNull: false, comment: 'Price of one baseUnit (e.g. Price of a Bottle)', },
+  purchasePrice: { type: DataTypes.DECIMAL(10, 2), allowNull: false, comment: 'Coût d\'une unité d\'achat (par exemple, le prix d\'une boîte)', },
+  sellingPrice: { type: DataTypes.DECIMAL(10, 2), allowNull: false, comment: 'Prix d\'une unité de base (par exemple, le prix d\'une bouteille)', },
 }, {
   tableName: 'kzrl_products'
 });
