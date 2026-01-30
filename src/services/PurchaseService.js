@@ -1,5 +1,6 @@
-const { sequelize, Purchase, PurchaseItem, Product } = require('../models');
+const { sequelize, Purchase, PurchaseItem, Product, Expense } = require('../models');
 const StockService = require('./StockService');
+const CashService = require('./CashService');
 
 class PurchaseService {
 
@@ -55,6 +56,22 @@ class PurchaseService {
 
       purchase.totalCost = totalCost;
       await purchase.save({ transaction });
+
+      // Record Cash Movement (handles balance check)
+      await CashService.recordMovement({
+        type: 'OUT',
+        amount: totalCost,
+        reason: 'PURCHASE',
+        referenceId: purchase.id,
+        transaction
+      });
+
+      // Create Expense record for journal visibility
+      await Expense.create({
+        description: `Achat de boissons - Commande #${purchase.id.toString().substring(0, 8).toUpperCase()}`,
+        amount: totalCost,
+        date: new Date()
+      }, { transaction });
 
       await transaction.commit();
       return purchase;
