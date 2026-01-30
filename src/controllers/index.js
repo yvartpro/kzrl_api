@@ -284,11 +284,30 @@ const AuthController = {
   }
 };
 
+const SystemController = {
+  async initializeCash(req, res) {
+    try {
+      const { amount } = req.body;
+      const result = await CashService.initializeBalance(amount, req.user.id);
+      res.json(result);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+  },
+
+  async initializeStock(req, res) {
+    try {
+      const { productId, quantity } = req.body;
+      const result = await StockService.initializeStock(productId, quantity, req.user.id);
+      res.json(result);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+  }
+};
+
 module.exports = {
   ProductController,
   PurchaseController,
   SaleController,
   ReportController,
   AuthController,
-  UserController
+  UserController,
+  SystemController
 };

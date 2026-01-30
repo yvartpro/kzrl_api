@@ -11,7 +11,7 @@ const Stock = sequelize.define('Stock', {
 const StockMovement = sequelize.define('StockMovement', {
   id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true, },
   type: { type: DataTypes.ENUM('IN', 'OUT', 'ADJUSTMENT'), allowNull: false, },
-  reason: { type: DataTypes.ENUM('PURCHASE', 'SALE', 'LOSS', 'FREE', 'ADJUSTMENT'), allowNull: false, },
+  reason: { type: DataTypes.ENUM('PURCHASE', 'SALE', 'LOSS', 'FREE', 'ADJUSTMENT', 'INITIAL'), allowNull: false, },
   quantityChange: { type: DataTypes.INTEGER, allowNull: false, comment: 'Positive for IN, Negative for OUT. Always in BASE UNITS.', },
   previousQuantity: { type: DataTypes.INTEGER, allowNull: false, comment: 'Snapshot of stock before movement for audit', },
   newQuantity: { type: DataTypes.INTEGER, allowNull: false, comment: 'Snapshot of stock after movement for audit', },

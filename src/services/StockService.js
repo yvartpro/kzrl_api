@@ -116,6 +116,36 @@ class StockService {
       limit
     });
   }
+
+  /**
+   * Initialize stock for a product (Opening Stock)
+   */
+  static async initializeStock(productId, quantity, userId) {
+    const transaction = await sequelize.transaction();
+    try {
+      const stock = await this.getStock(productId);
+      const currentQuantity = stock.quantity;
+      const difference = quantity - currentQuantity;
+
+      if (difference !== 0) {
+        await this.createMovement({
+          productId,
+          type: difference > 0 ? 'IN' : 'OUT',
+          reason: 'INITIAL',
+          quantityChange: difference,
+          referenceId: userId,
+          description: `Initialisation du stock (Ouverture)`,
+          transaction
+        });
+      }
+
+      await transaction.commit();
+      return await this.getStock(productId);
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
+  }
 }
 
 module.exports = StockService;

@@ -63,4 +63,8 @@ router.post('/users', authorize('ADMIN'), UserController.createUser);
 router.patch('/users/:id/toggle', authorize('ADMIN'), UserController.toggleUserStatus);
 router.get('/roles', authorize('ADMIN'), UserController.listRoles);
 
+// System Initialization
+router.post('/system/initialize-cash', authorize('ADMIN'), SystemController.initializeCash);
+router.post('/system/initialize-stock', authorize('ADMIN'), SystemController.initializeStock);
+
 module.exports = router;

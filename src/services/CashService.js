@@ -74,6 +74,34 @@ class CashService {
       order: [['createdAt', 'DESC']]
     });
   }
+
+  /**
+   * Initialize cash balance (Opening Balance)
+   */
+  static async initializeBalance(amount, userId) {
+    const transaction = await sequelize.transaction();
+    try {
+      const register = await this.getDefaultRegister();
+      const currentBalance = parseFloat(register.balance);
+      const difference = amount - currentBalance;
+
+      if (difference !== 0) {
+        await this.recordMovement({
+          type: difference > 0 ? 'IN' : 'OUT',
+          amount: Math.abs(difference),
+          reason: 'OPENING_BALANCE',
+          referenceId: userId,
+          transaction
+        });
+      }
+
+      await transaction.commit();
+      return await this.getDefaultRegister();
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
+  }
 }
 
 module.exports = CashService;
