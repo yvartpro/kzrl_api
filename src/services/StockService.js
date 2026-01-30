@@ -20,7 +20,7 @@ class StockService {
    */
   static async createMovement({ productId, type, reason, quantityChange, referenceId, description, transaction }) {
     if (!transaction) {
-      throw new Error('Stock movements must be executed within a transaction');
+      throw new Error('Tout mouvement doit etre effectué dans une transaction');
     }
 
     const stock = await Stock.findOne({
@@ -30,7 +30,7 @@ class StockService {
     });
 
     if (!stock) {
-      throw new Error(`Stock record not found for Product ${productId}`);
+      throw new Error(`Enregistre non trouvé pour le produit ${productId}`);
     }
 
     const previousQuantity = stock.quantity;
@@ -39,7 +39,7 @@ class StockService {
     // Business Rule: No negative stock
     if (newQuantity < 0) {
       const product = await Product.findByPk(productId, { transaction });
-      throw new Error(`Insufficient stock for ${product ? product.name : productId}. Current: ${previousQuantity}, Requested: ${Math.abs(quantityChange)}`);
+      throw new Error(`Stock insuffisant pour ${product ? product.name : productId}. Actuel: ${previousQuantity}, Demandé: ${Math.abs(quantityChange)}`);
     }
 
     // Update Stock
@@ -84,7 +84,7 @@ class StockService {
         reason,
         quantityChange,
         referenceId: userId,
-        description: notes || `Manual ${reason.toLowerCase()}: ${Math.abs(quantityChange)} units`,
+        description: notes || `Manuel ${reason.toLowerCase()}: ${Math.abs(quantityChange)} unités`,
         transaction
       });
 
@@ -107,7 +107,7 @@ class StockService {
   static async getStockMovements(productId, limit = 50) {
     const stock = await Stock.findOne({ where: { ProductId: productId } });
     if (!stock) {
-      throw new Error('Stock record not found');
+      throw new Error('Enregistrement du stock non trouvé pour le produit');
     }
 
     return await StockMovement.findAll({

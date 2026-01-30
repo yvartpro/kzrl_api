@@ -10,7 +10,7 @@ class PurchaseService {
     try {
       const purchase = await Purchase.create({
         SupplierId: supplierId,
-        status: 'COMPLETED', // Use Pending/Completed logic if needed, simplifed here for IN move
+        status: 'COMPLETED',
         notes,
         totalCost: 0
       }, { transaction });

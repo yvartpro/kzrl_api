@@ -18,7 +18,7 @@ class CashService {
    */
   static async recordMovement({ type, amount, reason, referenceId, transaction }) {
     if (!transaction) {
-      throw new Error('Cash movements must be executed within a transaction');
+      throw new Error('Tout mouvement doit etre effectué dans une transaction');
     }
 
     const register = await CashRegister.findOne({
@@ -27,7 +27,7 @@ class CashService {
     });
 
     if (!register) {
-      throw new Error('Cash register not found');
+      throw new Error('Registre du cash non trouvé');
     }
 
     const previousBalance = parseFloat(register.balance);
@@ -35,7 +35,7 @@ class CashService {
     const newBalance = previousBalance + changeAmount;
 
     if (newBalance < 0) {
-      throw new Error('Insufficient cash balance');
+      throw new Error('Votre balance est insuffisante');
     }
 
     register.balance = newBalance;

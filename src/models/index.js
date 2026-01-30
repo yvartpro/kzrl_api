@@ -53,13 +53,13 @@ CashMovement.belongsTo(CashRegister);
 const syncDatabase = async () => {
   try {
     await sequelize.authenticate();
-    console.log('Connection has been established successfully.');
+    console.log('La connexion à la base de données a été établie avec succès.');
     // Force sync for dev; in prod use migrations
     // await sequelize.sync({ force: true }); 
     await sequelize.sync({ alter: true });
-    console.log('Database synced successfully.');
+    console.log('La base de données a été synchronisée avec succès.');
   } catch (error) {
-    console.error('Unable to connect to the database:', error);
+    console.error('La connexion à la base de données a échouée:', error);
   }
 };
 
