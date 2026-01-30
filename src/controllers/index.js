@@ -176,10 +176,18 @@ const ReportController = {
       res.json(report);
     } catch (e) { res.status(500).json({ error: e.message }); }
   },
+  async getJournal(req, res) {
+    try {
+      const { date, page, limit, search } = req.query;
+      const report = await ReportService.getJournal({ date, page, limit, search });
+      res.json(report);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+  },
+
   async getStockValue(req, res) {
     try {
-      const date = req.query.date ? new Date(req.query.date) : new Date();
-      const report = await ReportService.getStockValuation(date);
+      const { date, page, limit, search } = req.query;
+      const report = await ReportService.getStockValuation({ date, page, limit, search });
       res.json(report);
     } catch (e) { res.status(500).json({ error: e.message }); }
   },

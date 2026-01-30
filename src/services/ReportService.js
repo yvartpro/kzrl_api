@@ -1,4 +1,4 @@
-const { sequelize, Sale, SaleItem, Stock, Product } = require('../models');
+const { sequelize, Sale, SaleItem, Stock, Product, Expense, StockMovement } = require('../models');
 const { Op } = require('sequelize');
 
 class ReportService {
@@ -52,26 +52,115 @@ class ReportService {
   }
 
   /**
-   * Get Current Stock Valuation for a specific date
+   * Get paginated and searchable Journal (Sales + Expenses)
    */
-  static async getStockValuation(date = new Date()) {
+  static async getJournal({ date, page = 1, limit = 10, search = '' }) {
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+
     const endOfDay = new Date(date);
     endOfDay.setHours(23, 59, 59, 999);
 
-    const products = await Product.findAll();
+    const p = parseInt(page);
+    const l = parseInt(limit);
+    const offset = (p - 1) * l;
+
+
+    // Fetch all sales for the day (to calculate totals and for combination)
+    const sales = await Sale.findAll({
+      where: {
+        createdAt: { [Op.between]: [startOfDay, endOfDay] },
+        status: 'COMPLETED'
+      }
+    });
+
+    const expenses = await Expense.findAll({
+      where: {
+        createdAt: { [Op.between]: [startOfDay, endOfDay] }
+      }
+    });
+
+    // Combine and format
+    let entries = [];
+    sales.forEach(sale => {
+      entries.push({
+        id: sale.id,
+        date: sale.createdAt,
+        description: `Vente - ${sale.paymentMethod}`,
+        reference: `INV-${sale.id.toString().substring(0, 8).toUpperCase()}`,
+        debit: parseFloat(sale.totalAmount),
+        credit: 0,
+        type: 'SALE'
+      });
+    });
+
+    expenses.forEach(exp => {
+      entries.push({
+        id: exp.id,
+        date: exp.createdAt,
+        description: exp.description,
+        reference: `EXP-${exp.id.toString().substring(0, 8).toUpperCase()}`,
+        debit: 0,
+        credit: parseFloat(exp.amount),
+        type: 'EXPENSE'
+      });
+    });
+
+    // Sort by date
+    entries.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    // Calculate running balance for ALL entries
+    let runningBalance = 0;
+    entries.forEach(entry => {
+      runningBalance += entry.debit - entry.credit;
+      entry.balance = runningBalance;
+    });
+
+    // Apply search filter if present
+    if (search) {
+      const lowerSearch = search.toLowerCase();
+      entries = entries.filter(e =>
+        e.description.toLowerCase().includes(lowerSearch) ||
+        e.reference.toLowerCase().includes(lowerSearch)
+      );
+    }
+
+    const totalCount = entries.length;
+    const paginatedEntries = entries.slice(offset, offset + l);
+
+    return {
+      entries: paginatedEntries,
+      totalCount,
+      totalPages: Math.ceil(totalCount / limit),
+      currentPage: parseInt(page),
+      totalDebit: sales.reduce((sum, s) => sum + parseFloat(s.totalAmount), 0),
+      totalCredit: expenses.reduce((sum, e) => sum + parseFloat(e.amount), 0)
+    };
+  }
+
+  /**
+   * Get Current Stock Valuation for a specific date with pagination and search
+   */
+  static async getStockValuation({ date = new Date(), page = 1, limit = 10, search = '' }) {
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const where = {};
+    if (search) {
+      where.name = { [Op.like]: `%${search}%` };
+    }
+
+    const products = await Product.findAll({ where });
 
     let totalValuation = 0;
     let totalPotentialRevenue = 0;
-
-    const items = [];
+    const allItems = [];
 
     for (const product of products) {
-      // Find the last stock movement for this product before endOfDay
       const stock = await Stock.findOne({ where: { ProductId: product.id } });
       let quantity = 0;
 
       if (stock) {
-        // Find latest movement before or on the target date
         const lastMovement = await StockMovement.findOne({
           where: {
             StockId: stock.id,
@@ -83,24 +172,20 @@ class ReportService {
         if (lastMovement) {
           quantity = lastMovement.newQuantity;
         } else {
-          // If no movement yet, check if stock was created before endOfDay
-          if (stock.createdAt > endOfDay) {
-            continue; // Product didn't exist yet
-          }
-          quantity = 0; // Existed but no movements
+          if (stock.createdAt > endOfDay) continue;
+          quantity = 0;
         }
       }
 
       const unitCost = product.purchasePrice / product.unitsPerBox || 0;
       const unitValue = product.sellingPrice || 0;
-
       const costValue = quantity * unitCost;
       const salesValue = quantity * unitValue;
 
       totalValuation += costValue;
       totalPotentialRevenue += salesValue;
 
-      items.push({
+      allItems.push({
         productId: product.id,
         productName: product.name,
         quantity,
@@ -110,11 +195,19 @@ class ReportService {
       });
     }
 
+    const p = parseInt(page);
+    const l = parseInt(limit);
+    const offset = (p - 1) * l;
+    const paginatedItems = allItems.slice(offset, offset + l);
+
     return {
       totalValue: totalValuation,
       totalPotentialRevenue,
       date: endOfDay,
-      items
+      items: paginatedItems,
+      totalCount: allItems.length,
+      totalPages: Math.ceil(allItems.length / limit),
+      currentPage: parseInt(page)
     };
   }
 }

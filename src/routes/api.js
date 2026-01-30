@@ -43,6 +43,7 @@ router.get('/cash/expenses', CashController.getExpenses);
 
 // Reports
 router.get('/reports/daily', ReportController.getDaily);
+router.get('/reports/journal', ReportController.getJournal);
 router.get('/reports/stock-value', ReportController.getStockValue);
 router.get('/reports/stock-health', ReportController.getStockHealth);
 
