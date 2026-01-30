@@ -44,6 +44,7 @@ class ReportService {
     return {
       date: startOfDay,
       totalRevenue,
+      totalDailySales: totalRevenue,
       totalProfit,
       transactionCount: sales.length,
       itemsSold
