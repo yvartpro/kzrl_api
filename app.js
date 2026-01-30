@@ -14,9 +14,10 @@ app.use(helmet());
 app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json());
+app.use("/kzrl/", express.static("public"))
 
 // Routes
-app.use('/api', apiRoutes);
+app.use('/kzrl/api', apiRoutes);
 
 // Error Handler
 app.use((err, req, res, next) => {
