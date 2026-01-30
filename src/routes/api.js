@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const { ProductController, PurchaseController, SaleController, ReportController } = require('../controllers');
+const { ProductController, PurchaseController, SaleController, ReportController, AuthController } = require('../controllers');
 const CashController = require('../controllers/CashController');
 const StockController = require('../controllers/StockController');
 const { Category, Supplier } = require('../models');
+const { authenticate, authorize } = require('../middlewares/authMiddleware');
 
 // Helpers for simple CRUD
 const simpleCrud = (Model) => ({
@@ -11,11 +12,18 @@ const simpleCrud = (Model) => ({
   create: async (req, res) => res.status(201).json(await Model.create(req.body))
 });
 
+// Auth Routes
+router.post('/auth/login', AuthController.login);
+router.get('/auth/me', authenticate, AuthController.me);
+
+// Protected Routes
+router.use(authenticate);
+
 // Products & Categories
 router.get('/products', ProductController.list);
-router.post('/products', ProductController.create);
-router.patch('/products/:id', ProductController.updateProduct);
-router.delete('/products/:id', ProductController.deleteProduct);
+router.post('/products', authorize('ADMIN', 'MANAGER'), ProductController.create);
+router.patch('/products/:id', authorize('ADMIN', 'MANAGER'), ProductController.updateProduct);
+router.delete('/products/:id', authorize('ADMIN'), ProductController.deleteProduct);
 router.get('/categories', simpleCrud(Category).list);
 router.post('/categories', simpleCrud(Category).create);
 
@@ -28,7 +36,7 @@ router.post('/stock/adjust', StockController.adjust);
 router.get('/stock/movements/:productId', StockController.getMovements);
 
 // Operations
-router.post('/purchases', PurchaseController.create);
+router.post('/purchases', authorize('ADMIN', 'MANAGER'), PurchaseController.create);
 router.get('/purchases', PurchaseController.list);
 
 router.post('/sales', SaleController.create);
@@ -42,9 +50,9 @@ router.post('/cash/expenses', CashController.recordExpense);
 router.get('/cash/expenses', CashController.getExpenses);
 
 // Reports
-router.get('/reports/daily', ReportController.getDaily);
-router.get('/reports/journal', ReportController.getJournal);
-router.get('/reports/stock-value', ReportController.getStockValue);
-router.get('/reports/stock-health', ReportController.getStockHealth);
+router.get('/reports/daily', authorize('ADMIN', 'MANAGER'), ReportController.getDaily);
+router.get('/reports/journal', authorize('ADMIN', 'MANAGER'), ReportController.getJournal);
+router.get('/reports/stock-value', authorize('ADMIN', 'MANAGER'), ReportController.getStockValue);
+router.get('/reports/stock-health', authorize('ADMIN', 'MANAGER'), ReportController.getStockHealth);
 
 module.exports = router;

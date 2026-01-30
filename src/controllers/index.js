@@ -3,6 +3,7 @@ const StockService = require('../services/StockService');
 const PurchaseService = require('../services/PurchaseService');
 const SaleService = require('../services/SaleService');
 const ReportService = require('../services/ReportService');
+const AuthService = require('../services/AuthService');
 const { Product, Category, Stock, Supplier, Sale, Purchase } = require('../models');
 
 // Breaking down into sub-controllers or keeping simple dependent on size
@@ -167,7 +168,6 @@ const SaleController = {
     }
   }
 };
-
 const ReportController = {
   async getDaily(req, res) {
     try {
@@ -256,9 +256,30 @@ const ReportController = {
   }
 };
 
+const AuthController = {
+  async login(req, res) {
+    try {
+      const { username, password } = req.body;
+      const result = await AuthService.login(username, password);
+      res.json(result);
+    } catch (e) {
+      res.status(401).json({ error: e.message });
+    }
+  },
+
+  async me(req, res) {
+    try {
+      res.json({ user: req.user });
+    } catch (e) {
+      res.status(500).json({ error: e.message });
+    }
+  }
+};
+
 module.exports = {
   ProductController,
   PurchaseController,
   SaleController,
-  ReportController
+  ReportController,
+  AuthController
 };
