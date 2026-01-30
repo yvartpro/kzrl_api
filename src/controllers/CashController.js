@@ -46,6 +46,30 @@ const CashController = {
         throw error;
       }
     } catch (e) { res.status(400).json({ error: e.message }); }
+  },
+
+  async getExpenses(req, res) {
+    try {
+      const { startDate, endDate } = req.query;
+      const { Op } = require('sequelize');
+
+      const where = {};
+      if (startDate || endDate) {
+        where.createdAt = {};
+        if (startDate) where.createdAt[Op.gte] = new Date(startDate);
+        if (endDate) where.createdAt[Op.lte] = new Date(endDate);
+      }
+
+      const expenses = await Expense.findAll({
+        where,
+        order: [['createdAt', 'DESC']]
+      });
+
+      res.json(expenses);
+    } catch (e) {
+      console.error('Get expenses error:', e);
+      res.status(500).json({ error: e.message });
+    }
   }
 };
 

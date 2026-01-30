@@ -67,6 +67,55 @@ class StockService {
   static async initStock(productId, transaction) {
     return await Stock.create({ ProductId: productId, quantity: 0 }, { transaction });
   }
+
+  /**
+   * Adjust stock manually (for losses, free items, or corrections)
+   * Reason: LOSS | FREE | ADJUSTMENT
+   */
+  static async adjustStock(productId, quantityChange, reason, notes, userId) {
+    const transaction = await sequelize.transaction();
+
+    try {
+      const type = quantityChange > 0 ? 'IN' : 'OUT';
+
+      await this.createMovement({
+        productId,
+        type,
+        reason,
+        quantityChange,
+        referenceId: userId,
+        description: notes || `Manual ${reason.toLowerCase()}: ${Math.abs(quantityChange)} units`,
+        transaction
+      });
+
+      await transaction.commit();
+
+      // Return updated stock
+      return await Stock.findOne({
+        where: { ProductId: productId },
+        include: [Product]
+      });
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
+  }
+
+  /**
+   * Get stock movement history for a product
+   */
+  static async getStockMovements(productId, limit = 50) {
+    const stock = await Stock.findOne({ where: { ProductId: productId } });
+    if (!stock) {
+      throw new Error('Stock record not found');
+    }
+
+    return await StockMovement.findAll({
+      where: { StockId: stock.id },
+      order: [['createdAt', 'DESC']],
+      limit
+    });
+  }
 }
 
 module.exports = StockService;
