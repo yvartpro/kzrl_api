@@ -27,7 +27,7 @@ app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json());
 app.use("/kzrl/", express.static("public"))
-app.use("/kzrl/*", express.static(path.join(__dirname, 'public', 'index.html')));
+app.get('/kzrl/*', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'index.html')) });
 
 // Routes
 app.use('/kzrl/api', apiRoutes);
