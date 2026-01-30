@@ -177,8 +177,8 @@ class ReportService {
         }
       }
 
-      const unitCost = product.purchasePrice / product.unitsPerBox || 0;
-      const unitValue = product.sellingPrice || 0;
+      const unitCost = parseFloat(product.purchasePrice) / (product.unitsPerBox || 1);
+      const unitValue = parseFloat(product.sellingPrice) || 0;
       const costValue = quantity * unitCost;
       const salesValue = quantity * unitValue;
 
@@ -225,7 +225,7 @@ class ReportService {
     for (const product of products) {
       const stock = await Stock.findOne({ where: { ProductId: product.id } });
       if (stock && stock.quantity > 0) {
-        const unitCost = product.purchasePrice / product.unitsPerBox || 0;
+        const unitCost = parseFloat(product.purchasePrice) / (product.unitsPerBox || 1);
         stockValue += stock.quantity * unitCost;
       }
     }

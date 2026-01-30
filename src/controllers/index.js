@@ -8,8 +8,6 @@ const AuthService = require('../services/AuthService');
 const UserController = require('./UserController');
 const { Product, Category, Stock, Supplier, Sale, Purchase } = require('../models');
 
-// Breaking down into sub-controllers or keeping simple dependent on size
-// For now, simple object based controllers to export
 
 const ProductController = {
   async list(req, res) {
@@ -207,7 +205,7 @@ const ReportController = {
 
       const stockHealth = products.map(product => {
         const quantity = product.Stock?.quantity || 0;
-        const unitCost = parseFloat(product.unitCost) || 0;
+        const unitCost = parseFloat(product.purchasePrice) / (product.unitsPerBox || 1);
         const totalValue = quantity * unitCost;
         const sellingPrice = parseFloat(product.sellingPrice) || 0;
         const potentialRevenue = quantity * sellingPrice;
