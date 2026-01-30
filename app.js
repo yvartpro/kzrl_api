@@ -3,6 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 require('dotenv').config();
+const path = require('path');
 
 const { syncDatabase } = require('./src/models');
 const apiRoutes = require('./src/routes/api');
@@ -26,6 +27,7 @@ app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json());
 app.use("/kzrl/", express.static("public"))
+app.use("/kzrl/*", express.static(path.join(__dirname, 'public', 'index.html')));
 
 // Routes
 app.use('/kzrl/api', apiRoutes);
