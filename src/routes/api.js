@@ -14,6 +14,8 @@ const simpleCrud = (Model) => ({
 // Products & Categories
 router.get('/products', ProductController.list);
 router.post('/products', ProductController.create);
+router.patch('/products/:id', ProductController.updateProduct);
+router.delete('/products/:id', ProductController.deleteProduct);
 router.get('/categories', simpleCrud(Category).list);
 router.post('/categories', simpleCrud(Category).create);
 
@@ -30,6 +32,7 @@ router.post('/purchases', PurchaseController.create);
 router.get('/purchases', PurchaseController.list);
 
 router.post('/sales', SaleController.create);
+router.post('/sales/bulk', SaleController.createBulkSales);
 router.get('/sales', SaleController.list);
 
 // Cash Management
@@ -41,5 +44,6 @@ router.get('/cash/expenses', CashController.getExpenses);
 // Reports
 router.get('/reports/daily', ReportController.getDaily);
 router.get('/reports/stock-value', ReportController.getStockValue);
+router.get('/reports/stock-health', ReportController.getStockHealth);
 
 module.exports = router;

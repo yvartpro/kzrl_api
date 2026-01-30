@@ -11,7 +11,13 @@ const { Product, Category, Stock, Supplier, Sale, Purchase } = require('../model
 const ProductController = {
   async list(req, res) {
     try {
-      const products = await Product.findAll({ include: [Category, Stock] });
+      const products = await Product.findAll({
+        include: [
+          Category,
+          Stock,
+          { model: Supplier, required: false }
+        ]
+      });
       res.json(products);
     } catch (e) { res.status(500).json({ error: e.message }); }
   },
@@ -22,6 +28,63 @@ const ProductController = {
       await StockService.initStock(product.id); // Init stock
       res.status(201).json(product);
     } catch (e) { res.status(400).json({ error: e.message }); }
+  },
+
+  async updateProduct(req, res) {
+    try {
+      const { id } = req.params;
+      const { name, categoryId, supplierId, boxQuantity, unitsPerBox, unitCost, sellingPrice } = req.body;
+
+      const product = await Product.findByPk(id);
+      if (!product) {
+        return res.status(404).json({ error: 'Product not found' });
+      }
+
+      // Update only provided fields
+      const updates = {};
+      if (name !== undefined) updates.name = name;
+      if (categoryId !== undefined) updates.CategoryId = categoryId;
+      if (supplierId !== undefined) updates.SupplierId = supplierId;
+      if (boxQuantity !== undefined) updates.boxQuantity = boxQuantity;
+      if (unitsPerBox !== undefined) updates.unitsPerBox = unitsPerBox;
+      if (unitCost !== undefined) updates.unitCost = unitCost;
+      if (sellingPrice !== undefined) updates.sellingPrice = sellingPrice;
+
+      await product.update(updates);
+
+      // Fetch updated product with associations
+      const updatedProduct = await Product.findByPk(id, {
+        include: [
+          { model: Category, attributes: ['id', 'name'] },
+          { model: Supplier, attributes: ['id', 'name'] },
+          { model: Stock, attributes: ['quantity'] }
+        ]
+      });
+
+      res.json(updatedProduct);
+    } catch (error) {
+      console.error('Update product error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  },
+
+  async deleteProduct(req, res) {
+    try {
+      const { id } = req.params;
+
+      const product = await Product.findByPk(id);
+      if (!product) {
+        return res.status(404).json({ error: 'Product not found' });
+      }
+
+      // Soft delete (paranoid is enabled in model)
+      await product.destroy();
+
+      res.json({ message: 'Product deleted successfully' });
+    } catch (error) {
+      console.error('Delete product error:', error);
+      res.status(500).json({ error: error.message });
+    }
   }
 };
 
@@ -54,6 +117,48 @@ const SaleController = {
       const sales = await Sale.findAll({ order: [['createdAt', 'DESC']] });
       res.json(sales);
     } catch (e) { res.status(500).json({ error: e.message }); }
+  },
+
+  async createBulkSales(req, res) {
+    try {
+      const salesData = req.body; // Array of sales
+
+      if (!Array.isArray(salesData) || salesData.length === 0) {
+        return res.status(400).json({ error: 'Sales data must be a non-empty array' });
+      }
+
+      const results = [];
+      const errors = [];
+
+      // Process each sale
+      for (let i = 0; i < salesData.length; i++) {
+        const saleData = salesData[i];
+        try {
+          // Use existing SaleService for each sale
+          const sale = await SaleService.createSale({
+            items: [{
+              productId: saleData.productId,
+              quantity: saleData.quantity
+            }],
+            paymentMethod: saleData.paymentMethod,
+            notes: saleData.notes || `Bulk entry ${i + 1}`
+          });
+
+          results.push({ index: i, saleId: sale.id, success: true });
+        } catch (err) {
+          errors.push({ index: i, error: err.message });
+        }
+      }
+
+      res.status(errors.length > 0 ? 207 : 201).json({
+        message: `Processed ${results.length} sales successfully`,
+        results,
+        errors: errors.length > 0 ? errors : undefined
+      });
+    } catch (error) {
+      console.error('Bulk sales error:', error);
+      res.status(500).json({ error: error.message });
+    }
   }
 };
 
@@ -70,6 +175,69 @@ const ReportController = {
       const report = await ReportService.getStockValuation();
       res.json(report);
     } catch (e) { res.status(500).json({ error: e.message }); }
+  },
+
+  async getStockHealth(req, res) {
+    try {
+      const products = await Product.findAll({
+        include: [
+          { model: Stock, attributes: ['quantity'] },
+          { model: Category, attributes: ['name'] },
+          { model: Supplier, attributes: ['name'] }
+        ],
+        order: [['name', 'ASC']]
+      });
+
+      const stockHealth = products.map(product => {
+        const quantity = product.Stock?.quantity || 0;
+        const unitCost = parseFloat(product.unitCost) || 0;
+        const totalValue = quantity * unitCost;
+        const sellingPrice = parseFloat(product.sellingPrice) || 0;
+        const potentialRevenue = quantity * sellingPrice;
+        const margin = sellingPrice - unitCost;
+        const marginPercent = unitCost > 0 ? ((margin / unitCost) * 100).toFixed(2) : 0;
+
+        // Determine status
+        let status = 'OK';
+        if (quantity === 0) {
+          status = 'OUT';
+        } else if (quantity <= 10) {
+          status = 'LOW';
+        }
+
+        return {
+          id: product.id,
+          name: product.name,
+          category: product.Category?.name || 'N/A',
+          supplier: product.Supplier?.name || 'N/A',
+          quantity,
+          unitCost,
+          totalValue,
+          sellingPrice,
+          potentialRevenue,
+          margin,
+          marginPercent,
+          status
+        };
+      });
+
+      // Calculate totals
+      const totals = {
+        totalStockValue: stockHealth.reduce((sum, item) => sum + item.totalValue, 0),
+        totalPotentialRevenue: stockHealth.reduce((sum, item) => sum + item.potentialRevenue, 0),
+        totalProducts: stockHealth.length,
+        outOfStock: stockHealth.filter(item => item.status === 'OUT').length,
+        lowStock: stockHealth.filter(item => item.status === 'LOW').length
+      };
+
+      res.json({
+        stockHealth,
+        totals
+      });
+    } catch (error) {
+      console.error('Stock health error:', error);
+      res.status(500).json({ error: error.message });
+    }
   }
 };
 
