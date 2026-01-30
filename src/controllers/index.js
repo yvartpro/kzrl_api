@@ -298,6 +298,19 @@ const SystemController = {
       const result = await StockService.initializeStock(productId, quantity, req.user.id);
       res.json(result);
     } catch (e) { res.status(500).json({ error: e.message }); }
+  },
+
+  async payStaff(req, res) {
+    try {
+      const { userId, amount, description } = req.body;
+      const result = await CashService.payStaff({
+        userId,
+        amount,
+        description,
+        processedBy: req.user.id
+      });
+      res.json(result);
+    } catch (e) { res.status(500).json({ error: e.message }); }
   }
 };
 

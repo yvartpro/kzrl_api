@@ -1,4 +1,4 @@
-const { sequelize, CashRegister, CashMovement, Sale } = require('../models');
+const { sequelize, CashRegister, CashMovement, Sale, Expense } = require('../models');
 
 class CashService {
 
@@ -97,6 +97,36 @@ class CashService {
 
       await transaction.commit();
       return await this.getDefaultRegister();
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
+  }
+
+  /**
+   * Process staff payment
+   */
+  static async payStaff({ userId, amount, description, processedBy }) {
+    const transaction = await sequelize.transaction();
+    try {
+      // 1. Record Cash Movement
+      await this.recordMovement({
+        type: 'OUT',
+        amount: parseFloat(amount),
+        reason: 'STAFF_PAYMENT',
+        referenceId: userId,
+        transaction
+      });
+
+      // 2. Create Expense record
+      await Expense.create({
+        description: description || `Salaire personnel - ID: ${userId}`,
+        amount: parseFloat(amount),
+        date: new Date()
+      }, { transaction });
+
+      await transaction.commit();
+      return { success: true };
     } catch (error) {
       await transaction.rollback();
       throw error;

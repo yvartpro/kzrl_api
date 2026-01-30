@@ -13,6 +13,7 @@ const User = sequelize.define('User', {
   username: { type: DataTypes.STRING, allowNull: false, unique: true, },
   passwordHash: { type: DataTypes.STRING, allowNull: false, },
   isActive: { type: DataTypes.BOOLEAN, defaultValue: true, },
+  salary: { type: DataTypes.DECIMAL(10, 2), defaultValue: 0.00, allowNull: false, },
 }, {
   tableName: 'kzrl_users'
 });

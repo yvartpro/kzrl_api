@@ -37,7 +37,8 @@ const UserController = {
         username,
         passwordHash,
         RoleId: roleId,
-        isActive: true
+        isActive: true,
+        salary: req.body.salary || 0
       });
 
       const userWithRole = await User.findByPk(user.id, {
@@ -105,6 +106,38 @@ const UserController = {
       res.json(roles);
     } catch (e) {
       res.status(500).json({ error: e.message });
+    }
+  },
+
+  /**
+   * Update user details (Admin only)
+   */
+  async updateUser(req, res) {
+    try {
+      const { id } = req.params;
+      const { username, roleId, salary, isActive } = req.body;
+      const user = await User.findByPk(id);
+
+      if (!user) {
+        return res.status(404).json({ error: 'Utilisateur non trouvé.' });
+      }
+
+      const updates = {};
+      if (username !== undefined) updates.username = username;
+      if (roleId !== undefined) updates.RoleId = roleId;
+      if (salary !== undefined) updates.salary = salary;
+      if (isActive !== undefined) updates.isActive = isActive;
+
+      await user.update(updates);
+
+      const updatedUser = await User.findByPk(id, {
+        include: [Role],
+        attributes: { exclude: ['passwordHash'] }
+      });
+
+      res.json(updatedUser);
+    } catch (e) {
+      res.status(400).json({ error: e.message });
     }
   }
 };

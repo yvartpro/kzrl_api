@@ -60,11 +60,13 @@ router.get('/reports/global-capital', authorize('ADMIN', 'MANAGER'), ReportContr
 // User Management (Admin Only)
 router.get('/users', authorize('ADMIN'), UserController.listUsers);
 router.post('/users', authorize('ADMIN'), UserController.createUser);
+router.patch('/users/:id', authorize('ADMIN'), UserController.updateUser);
 router.patch('/users/:id/toggle', authorize('ADMIN'), UserController.toggleUserStatus);
 router.get('/roles', authorize('ADMIN'), UserController.listRoles);
 
 // System Initialization
 router.post('/system/initialize-cash', authorize('ADMIN'), SystemController.initializeCash);
-router.post('/system/initialize-stock', authorize('ADMIN'), SystemController.initializeStock);
+router.post('/system/initialize-stock', authorize('ADMIN', 'MANAGER'), SystemController.initializeStock);
+router.post('/system/pay-staff', authorize('ADMIN', 'MANAGER'), SystemController.payStaff);
 
 module.exports = router;
