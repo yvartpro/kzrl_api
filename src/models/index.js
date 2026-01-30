@@ -14,6 +14,10 @@ User.belongsTo(Role);
 Category.hasMany(Product);
 Product.belongsTo(Category);
 
+// Product & Supplier
+Supplier.hasMany(Product);
+Product.belongsTo(Supplier);
+
 // Stock
 Product.hasOne(Stock);
 Stock.belongsTo(Product);
