@@ -42,6 +42,9 @@ Sale.belongsTo(Store);
 Store.hasMany(Purchase);
 Purchase.belongsTo(Store);
 
+Store.hasMany(Expense);
+Expense.belongsTo(Store);
+
 // Purchases Details
 Supplier.hasMany(Purchase);
 Purchase.belongsTo(Supplier);

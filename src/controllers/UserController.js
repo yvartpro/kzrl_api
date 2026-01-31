@@ -9,7 +9,10 @@ const UserController = {
   async listUsers(req, res) {
     try {
       const users = await User.findAll({
-        include: [{ model: Role, attributes: ['id', 'name'] }],
+        include: [
+          { model: Role, attributes: ['id', 'name'] },
+          { model: Store, attributes: ['id', 'name'], through: { attributes: [] } }
+        ],
         attributes: { exclude: ['passwordHash'] },
         order: [['username', 'ASC']]
       });
@@ -24,7 +27,7 @@ const UserController = {
    */
   async createUser(req, res) {
     try {
-      const { username, password, roleId } = req.body;
+      const { username, password, roleId, storeIds } = req.body;
 
       const existingUser = await User.findOne({ where: { username } });
       if (existingUser) {
@@ -50,8 +53,12 @@ const UserController = {
         salary: req.body.salary || 0
       });
 
+      if (storeIds && Array.isArray(storeIds)) {
+        await user.setStores(storeIds);
+      }
+
       const userWithRole = await User.findByPk(user.id, {
-        include: [Role],
+        include: [Role, Store],
         attributes: { exclude: ['passwordHash'] }
       });
 
@@ -130,7 +137,7 @@ const UserController = {
   async updateUser(req, res) {
     try {
       const { id } = req.params;
-      const { username, roleId, salary, isActive } = req.body;
+      const { username, roleId, salary, isActive, storeIds } = req.body;
       const user = await User.findByPk(id);
 
       if (!user) {
@@ -154,8 +161,12 @@ const UserController = {
 
       await user.update(updates);
 
+      if (isAdmin && storeIds && Array.isArray(storeIds)) {
+        await user.setStores(storeIds);
+      }
+
       const updatedUser = await User.findByPk(id, {
-        include: [Role],
+        include: [Role, Store],
         attributes: { exclude: ['passwordHash'] }
       });
 

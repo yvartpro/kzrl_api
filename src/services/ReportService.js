@@ -6,20 +6,26 @@ class ReportService {
   /**
    * Get Daily Sales Report
    */
-  static async getDailySales(date = new Date()) {
+  static async getDailySales(date = new Date(), storeId) {
     const startOfDay = new Date(date);
     startOfDay.setHours(0, 0, 0, 0);
 
     const endOfDay = new Date(date);
     endOfDay.setHours(23, 59, 59, 999);
 
-    const sales = await Sale.findAll({
-      where: {
-        createdAt: {
-          [Op.between]: [startOfDay, endOfDay]
-        },
-        status: 'COMPLETED'
+    const where = {
+      createdAt: {
+        [Op.between]: [startOfDay, endOfDay]
       },
+      status: 'COMPLETED'
+    };
+
+    if (storeId) {
+      where.StoreId = storeId;
+    }
+
+    const sales = await Sale.findAll({
+      where,
       include: [{
         model: SaleItem,
         include: [Product]
@@ -66,18 +72,26 @@ class ReportService {
     const offset = (p - 1) * l;
 
 
+    const salesWhere = {
+      createdAt: { [Op.between]: [startOfDay, endOfDay] },
+      status: 'COMPLETED'
+    };
+    const expensesWhere = {
+      createdAt: { [Op.between]: [startOfDay, endOfDay] }
+    };
+
+    if (storeId) {
+      salesWhere.StoreId = storeId;
+      expensesWhere.StoreId = storeId;
+    }
+
     // Fetch all sales for the day (to calculate totals and for combination)
     const sales = await Sale.findAll({
-      where: {
-        createdAt: { [Op.between]: [startOfDay, endOfDay] },
-        status: 'COMPLETED'
-      }
+      where: salesWhere
     });
 
     const expenses = await Expense.findAll({
-      where: {
-        createdAt: { [Op.between]: [startOfDay, endOfDay] }
-      }
+      where: expensesWhere
     });
 
     // Combine and format
@@ -141,7 +155,7 @@ class ReportService {
   /**
    * Get Current Stock Valuation for a specific date with pagination and search
    */
-  static async getStockValuation({ date = new Date(), page = 1, limit = 10, search = '' }) {
+  static async getStockValuation({ date = new Date(), page = 1, limit = 10, search = '', storeId }) {
     const endOfDay = new Date(date);
     endOfDay.setHours(23, 59, 59, 999);
 
@@ -157,7 +171,12 @@ class ReportService {
     const allItems = [];
 
     for (const product of products) {
-      const stock = await Stock.findOne({ where: { ProductId: product.id } });
+      const stockWhere = { ProductId: product.id };
+      if (storeId) {
+        stockWhere.StoreId = storeId;
+      }
+
+      const stock = await Stock.findOne({ where: stockWhere });
       let quantity = 0;
 
       if (stock) {
@@ -212,18 +231,22 @@ class ReportService {
   }
 
   /**
-   * Get Global Capital (Cash + Stock Valuation)
+   * Get Capital (Cash + Stock Valuation) for a store or global
    */
-  static async getGlobalCapital() {
+  static async getGlobalCapital(storeId) {
     const CashService = require('./CashService');
-    const liquidAssets = await CashService.getBalance();
+    const liquidAssets = await CashService.getBalance(storeId);
 
     // Calculate stock valuation (Cost Basis)
     const products = await Product.findAll();
     let stockValue = 0;
 
     for (const product of products) {
-      const stock = await Stock.findOne({ where: { ProductId: product.id } });
+      const stockWhere = { ProductId: product.id };
+      if (storeId) {
+        stockWhere.StoreId = storeId;
+      }
+      const stock = await Stock.findOne({ where: stockWhere });
       if (stock && stock.quantity > 0) {
         const unitCost = parseFloat(product.purchasePrice) / (product.unitsPerBox || 1);
         stockValue += stock.quantity * unitCost;

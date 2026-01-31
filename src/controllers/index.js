@@ -13,10 +13,10 @@ const { Product, Category, Stock, Supplier, Sale, Purchase, Store } = require('.
 const ProductController = {
   async list(req, res) {
     try {
-      const { storeId } = req.query;
+      const { storeId, filterByStock } = req.query;
       const stockInclude = {
         model: Stock,
-        required: false
+        required: filterByStock === 'false' ? false : !!storeId
       };
 
       if (storeId) {
@@ -135,7 +135,10 @@ const SaleController = {
   },
   async list(req, res) {
     try {
-      const sales = await Sale.findAll({ order: [['createdAt', 'DESC']] });
+      const { storeId } = req.query;
+      const where = {};
+      if (storeId) where.StoreId = storeId;
+      const sales = await Sale.findAll({ where, order: [['createdAt', 'DESC']] });
       res.json(sales);
     } catch (e) { res.status(500).json({ error: e.message }); }
   },
@@ -187,32 +190,41 @@ const SaleController = {
 const ReportController = {
   async getDaily(req, res) {
     try {
-      const date = req.query.date ? new Date(req.query.date) : new Date();
-      const report = await ReportService.getDailySales(date);
+      const { date, storeId } = req.query;
+      const reportDate = date ? new Date(date) : new Date();
+      const report = await ReportService.getDailySales(reportDate, storeId);
       res.json(report);
     } catch (e) { res.status(500).json({ error: e.message }); }
   },
   async getJournal(req, res) {
     try {
-      const { date, page, limit, search } = req.query;
-      const report = await ReportService.getJournal({ date, page, limit, search });
+      const { date, page, limit, search, storeId } = req.query;
+      const report = await ReportService.getJournal({ date, page, limit, search, storeId });
       res.json(report);
     } catch (e) { res.status(500).json({ error: e.message }); }
   },
 
   async getStockValue(req, res) {
     try {
-      const { date, page, limit, search } = req.query;
-      const report = await ReportService.getStockValuation({ date, page, limit, search });
+      const { date, page, limit, search, storeId } = req.query;
+      const report = await ReportService.getStockValuation({ date, page, limit, search, storeId });
       res.json(report);
     } catch (e) { res.status(500).json({ error: e.message }); }
   },
 
   async getStockHealth(req, res) {
     try {
+      const { storeId } = req.query;
+      const productWhere = {};
+      const stockInclude = { model: Stock, attributes: ['quantity'] };
+
+      if (storeId) {
+        stockInclude.where = { StoreId: storeId };
+      }
+
       const products = await Product.findAll({
         include: [
-          { model: Stock, attributes: ['quantity'] },
+          stockInclude,
           { model: Category, attributes: ['name'] },
           { model: Supplier, attributes: ['name'] }
         ],
@@ -220,7 +232,8 @@ const ReportController = {
       });
 
       const stockHealth = products.map(product => {
-        const quantity = product.Stock?.quantity || 0;
+        const stocks = product.Stocks || [];
+        const quantity = Array.isArray(stocks) ? (stocks[0]?.quantity || 0) : (product.Stock?.quantity || 0);
         const unitCost = parseFloat(product.purchasePrice) / (product.unitsPerBox || 1);
         const totalValue = quantity * unitCost;
         const sellingPrice = parseFloat(product.sellingPrice) || 0;
@@ -273,7 +286,8 @@ const ReportController = {
 
   async getGlobalCapital(req, res) {
     try {
-      const capital = await ReportService.getGlobalCapital();
+      const { storeId } = req.query;
+      const capital = await ReportService.getGlobalCapital(storeId);
       res.json(capital);
     } catch (e) { res.status(500).json({ error: e.message }); }
   }

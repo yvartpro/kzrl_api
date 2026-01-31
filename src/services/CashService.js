@@ -152,6 +152,7 @@ class CashService {
       await Expense.create({
         description: `Salaire: ${description || period}`,
         amount: parseFloat(amount),
+        StoreId: storeId,
         date: new Date()
       }, { transaction });
 

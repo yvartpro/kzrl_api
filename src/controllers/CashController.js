@@ -28,7 +28,7 @@ const CashController = {
       const { description, amount, storeId } = req.body;
       if (!storeId) return res.status(400).json({ error: 'storeId is required' });
 
-      const expense = await Expense.create({ description, amount });
+      const expense = await Expense.create({ description, amount, StoreId: storeId });
 
       // Record cash OUT movement
       const { sequelize } = require('../models');
@@ -54,10 +54,11 @@ const CashController = {
 
   async getExpenses(req, res) {
     try {
-      const { startDate, endDate } = req.query;
+      const { startDate, endDate, storeId } = req.query;
       const { Op } = require('sequelize');
 
       const where = {};
+      if (storeId) where.StoreId = storeId;
       if (startDate || endDate) {
         where.createdAt = {};
         if (startDate) where.createdAt[Op.gte] = new Date(startDate);
