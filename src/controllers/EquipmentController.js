@@ -91,18 +91,42 @@ const EquipmentController = {
   async startInventory(req, res) {
     const transaction = await sequelize.transaction();
     try {
-      const { storeId, notes } = req.body;
+      const { storeId, notes, categoryId } = req.body;
       const userId = req.user.id;
+
+      // Build where clause for conflict check
+      const conflictWhere = { StoreId: storeId, status: 'OPEN' };
+      if (categoryId) {
+        // If starting a category inventory, check if that category is already open
+        conflictWhere.EquipmentCategoryId = categoryId;
+      } else {
+        // If starting global, check if GLOBAL is open (optionally we could block if ANY is open)
+        conflictWhere.EquipmentCategoryId = null;
+      }
+
+      // Check if an open inventory already exists for this scope
+      const existingOpenInventory = await EquipmentInventory.findOne({
+        where: conflictWhere,
+        transaction
+      });
+
+      if (existingOpenInventory) {
+        throw new Error('Un inventaire est déjà en cours pour cette catégorie (ou global). Veuillez le clôturer avant d\'en commencer un nouveau.');
+      }
 
       const inventory = await EquipmentInventory.create({
         StoreId: storeId,
         UserId: userId,
+        EquipmentCategoryId: categoryId || null,
         notes,
         status: 'OPEN'
       }, { transaction });
 
-      // Pre-fill inventory items with current equipment
-      const allEquipment = await Equipment.findAll({ where: { StoreId: storeId }, transaction });
+      // Pre-fill inventory items with current equipment (filtered by category if specified)
+      const equipmentWhere = { StoreId: storeId };
+      if (categoryId) equipmentWhere.EquipmentCategoryId = categoryId;
+
+      const allEquipment = await Equipment.findAll({ where: equipmentWhere, transaction });
 
       const items = allEquipment.map(eq => ({
         EquipmentInventoryId: inventory.id,

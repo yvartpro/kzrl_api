@@ -38,6 +38,9 @@ EquipmentInventory.belongsTo(Store);
 User.hasMany(EquipmentInventory);
 EquipmentInventory.belongsTo(User);
 
+EquipmentCategory.hasMany(EquipmentInventory);
+EquipmentInventory.belongsTo(EquipmentCategory);
+
 EquipmentInventory.hasMany(EquipmentInventoryItem);
 EquipmentInventoryItem.belongsTo(EquipmentInventory);
 
