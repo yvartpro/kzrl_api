@@ -62,6 +62,10 @@ class CashService {
    * Get cash balance for a specific store
    */
   static async getBalance(storeId) {
+    if (!storeId) {
+      const registers = await CashRegister.findAll();
+      return registers.reduce((sum, r) => sum + parseFloat(r.balance), 0);
+    }
     const register = await this.getRegister(storeId);
     return parseFloat(register.balance);
   }
