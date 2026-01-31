@@ -1,4 +1,4 @@
-const { User, Role } = require('../models');
+const { User, Role, Store } = require('../models');
 const AuthService = require('../services/AuthService');
 const bcrypt = require('bcrypt');
 
@@ -161,7 +161,7 @@ const UserController = {
 
       await user.update(updates);
 
-      if (isAdmin && storeIds && Array.isArray(storeIds)) {
+      if (req.user.role === 'ADMIN' && storeIds && Array.isArray(storeIds)) {
         await user.setStores(storeIds);
       }
 
