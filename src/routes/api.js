@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const {
   ProductController, CategoryController, PurchaseController, SaleController, ReportController,
-  AuthController, UserController, SystemController, StoreController
+  AuthController, UserController, SystemController, StoreController, EquipmentController
 } = require('../controllers');
 const CashController = require('../controllers/CashController');
 const StockController = require('../controllers/StockController');
@@ -72,6 +72,19 @@ router.get('/stores', StoreController.list);
 router.post('/stores', authorize('ADMIN'), StoreController.create);
 router.patch('/stores/:id', authorize('ADMIN'), StoreController.update);
 router.post('/stores/assign', authorize('ADMIN'), StoreController.assignUser);
+
+// Equipment & Inventory Management
+router.get('/equipment/categories', EquipmentController.listCategories);
+router.post('/equipment/categories', authorize('ADMIN', 'MANAGER'), EquipmentController.createCategory);
+router.get('/equipment', EquipmentController.listEquipment);
+router.post('/equipment', authorize('ADMIN', 'MANAGER'), EquipmentController.createEquipment);
+router.patch('/equipment/:id', authorize('ADMIN', 'MANAGER'), EquipmentController.updateEquipment);
+
+router.get('/equipment/inventories', EquipmentController.listInventories);
+router.get('/equipment/inventories/:id', EquipmentController.getInventory);
+router.post('/equipment/inventories', authorize('ADMIN', 'MANAGER'), EquipmentController.startInventory);
+router.patch('/equipment/inventories/items/:id', authorize('ADMIN', 'MANAGER'), EquipmentController.updateInventoryItem);
+router.post('/equipment/inventories/:id/close', authorize('ADMIN', 'MANAGER'), EquipmentController.closeInventory);
 
 // System Initialization
 router.post('/system/initialize-cash', authorize('ADMIN'), SystemController.initializeCash);

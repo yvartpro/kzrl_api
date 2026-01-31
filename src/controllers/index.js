@@ -7,6 +7,7 @@ const ReportService = require('../services/ReportService');
 const AuthService = require('../services/AuthService');
 const UserController = require('./UserController');
 const StoreController = require('./StoreController');
+const EquipmentController = require('./EquipmentController');
 const { Product, Category, Stock, Supplier, Sale, Purchase, Store } = require('../models');
 
 
@@ -401,5 +402,6 @@ module.exports = {
   AuthController,
   UserController,
   StoreController,
-  SystemController
+  SystemController,
+  EquipmentController
 };

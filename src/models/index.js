@@ -6,6 +6,7 @@ const { Stock, StockMovement } = require('./Stock');
 const { Supplier, Purchase, PurchaseItem } = require('./Purchase');
 const { Sale, SaleItem } = require('./Sale');
 const { CashRegister, CashMovement, Expense, SalaryPayment } = require('./Cash');
+const { EquipmentCategory, Equipment, EquipmentInventory, EquipmentInventoryItem } = require('./Equipment');
 
 // User, Role & Store
 Role.hasMany(User);
@@ -20,6 +21,28 @@ Product.belongsTo(Category);
 
 Store.hasMany(Category);
 Category.belongsTo(Store);
+// Equipment & Category
+Store.hasMany(EquipmentCategory);
+EquipmentCategory.belongsTo(Store);
+
+EquipmentCategory.hasMany(Equipment);
+Equipment.belongsTo(EquipmentCategory);
+
+Store.hasMany(Equipment);
+Equipment.belongsTo(Store);
+
+// Equipment Inventories
+Store.hasMany(EquipmentInventory);
+EquipmentInventory.belongsTo(Store);
+
+User.hasMany(EquipmentInventory);
+EquipmentInventory.belongsTo(User);
+
+EquipmentInventory.hasMany(EquipmentInventoryItem);
+EquipmentInventoryItem.belongsTo(EquipmentInventory);
+
+Equipment.hasMany(EquipmentInventoryItem);
+EquipmentInventoryItem.belongsTo(Equipment);
 
 // Product & Supplier
 Supplier.hasMany(Product);
@@ -103,5 +126,6 @@ module.exports = {
   Stock, StockMovement,
   Supplier, Purchase, PurchaseItem,
   Sale, SaleItem,
-  CashRegister, CashMovement, Expense, SalaryPayment
+  CashRegister, CashMovement, Expense, SalaryPayment,
+  EquipmentCategory, Equipment, EquipmentInventory, EquipmentInventoryItem
 };
