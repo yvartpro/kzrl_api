@@ -27,4 +27,15 @@ const Expense = sequelize.define('Expense', {
   tableName: 'kzrl_expenses'
 });
 
-module.exports = { CashRegister, CashMovement, Expense };
+const SalaryPayment = sequelize.define('SalaryPayment', {
+  id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true, },
+  amount: { type: DataTypes.DECIMAL(10, 2), allowNull: false, },
+  date: { type: DataTypes.DATE, defaultValue: DataTypes.NOW, },
+  period: { type: DataTypes.STRING, allowNull: false, comment: 'e.g., "Janvier 2026"', },
+  status: { type: DataTypes.ENUM('PAID', 'PENDING'), defaultValue: 'PAID', },
+  note: { type: DataTypes.TEXT, },
+}, {
+  tableName: 'kzrl_salary_payments'
+});
+
+module.exports = { CashRegister, CashMovement, Expense, SalaryPayment };

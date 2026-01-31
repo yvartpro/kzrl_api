@@ -6,25 +6,28 @@ const { Expense } = require('../models');
 const CashController = {
   async getBalance(req, res) {
     try {
-      const balance = await CashService.getBalance();
+      const { storeId } = req.query;
+      const balance = await CashService.getBalance(storeId);
       res.json({ balance });
     } catch (e) { res.status(500).json({ error: e.message }); }
   },
 
   async getMovements(req, res) {
     try {
-      const { startDate, endDate } = req.query;
+      const { startDate, endDate, storeId } = req.query;
       const start = startDate ? new Date(startDate) : new Date(new Date().setHours(0, 0, 0, 0));
       const end = endDate ? new Date(`${endDate}T23:59:59.999Z`) : new Date(new Date().setHours(23, 59, 59, 999));
 
-      const movements = await CashService.getMovements(start, end);
+      const movements = await CashService.getMovements(start, end, storeId);
       res.json(movements);
     } catch (e) { res.status(500).json({ error: e.message }); }
   },
 
   async recordExpense(req, res) {
     try {
-      const { description, amount } = req.body;
+      const { description, amount, storeId } = req.body;
+      if (!storeId) return res.status(400).json({ error: 'storeId is required' });
+
       const expense = await Expense.create({ description, amount });
 
       // Record cash OUT movement
@@ -33,6 +36,7 @@ const CashController = {
 
       try {
         await CashService.recordMovement({
+          storeId,
           type: 'OUT',
           amount,
           reason: 'EXPENSE',

@@ -1,14 +1,18 @@
 const sequelize = require('../config/database');
 const { User, Role } = require('./User');
+const Store = require('./Store');
 const { Category, Product } = require('./Product');
 const { Stock, StockMovement } = require('./Stock');
 const { Supplier, Purchase, PurchaseItem } = require('./Purchase');
 const { Sale, SaleItem } = require('./Sale');
-const { CashRegister, CashMovement, Expense } = require('./Cash');
+const { CashRegister, CashMovement, Expense, SalaryPayment } = require('./Cash');
 
-// User & Role
+// User, Role & Store
 Role.hasMany(User);
 User.belongsTo(Role);
+
+User.belongsToMany(Store, { through: 'kzrl_user_stores' });
+Store.belongsToMany(User, { through: 'kzrl_user_stores' });
 
 // Product & Category
 Category.hasMany(Product);
@@ -18,14 +22,27 @@ Product.belongsTo(Category);
 Supplier.hasMany(Product);
 Product.belongsTo(Supplier);
 
-// Stock
-Product.hasOne(Stock);
+// Store & Stock
+Store.hasMany(Stock);
+Stock.belongsTo(Store);
+
+Product.hasMany(Stock); // A product can be in multiple stocks (stores)
 Stock.belongsTo(Product);
+
+Store.hasMany(StockMovement);
+StockMovement.belongsTo(Store);
 
 Stock.hasMany(StockMovement);
 StockMovement.belongsTo(Stock);
 
-// Purchases
+// Transactions (Sale & Purchase) per Store
+Store.hasMany(Sale);
+Sale.belongsTo(Store);
+
+Store.hasMany(Purchase);
+Purchase.belongsTo(Store);
+
+// Purchases Details
 Supplier.hasMany(Purchase);
 Purchase.belongsTo(Supplier);
 
@@ -35,7 +52,7 @@ PurchaseItem.belongsTo(Purchase);
 Product.hasMany(PurchaseItem);
 PurchaseItem.belongsTo(Product);
 
-// Sales
+// Sales Details
 Sale.hasMany(SaleItem);
 SaleItem.belongsTo(Sale);
 
@@ -45,9 +62,18 @@ SaleItem.belongsTo(Product);
 User.hasMany(Sale); // Who made the sale
 Sale.belongsTo(User);
 
-// Cash
+// Cash & Salaries
+Store.hasOne(CashRegister);
+CashRegister.belongsTo(Store);
+
 CashRegister.hasMany(CashMovement);
 CashMovement.belongsTo(CashRegister);
+
+User.hasMany(SalaryPayment);
+SalaryPayment.belongsTo(User);
+
+CashRegister.hasMany(SalaryPayment);
+SalaryPayment.belongsTo(CashRegister);
 
 // Sync Function
 const syncDatabase = async () => {
@@ -66,10 +92,10 @@ const syncDatabase = async () => {
 module.exports = {
   sequelize,
   syncDatabase,
-  User, Role,
+  User, Role, Store,
   Category, Product,
   Stock, StockMovement,
   Supplier, Purchase, PurchaseItem,
   Sale, SaleItem,
-  CashRegister, CashMovement, Expense
+  CashRegister, CashMovement, Expense, SalaryPayment
 };

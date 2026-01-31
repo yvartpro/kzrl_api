@@ -64,6 +64,12 @@ router.patch('/users/:id', authorize('ADMIN', 'MANAGER'), UserController.updateU
 router.patch('/users/:id/toggle', authorize('ADMIN'), UserController.toggleUserStatus);
 router.get('/roles', authorize('ADMIN', 'MANAGER'), UserController.listRoles);
 
+// Store Management
+router.get('/stores', StoreController.list);
+router.post('/stores', authorize('ADMIN'), StoreController.create);
+router.patch('/stores/:id', authorize('ADMIN'), StoreController.update);
+router.post('/stores/assign', authorize('ADMIN'), StoreController.assignUser);
+
 // System Initialization
 router.post('/system/initialize-cash', authorize('ADMIN'), SystemController.initializeCash);
 router.post('/system/initialize-stock', authorize('ADMIN'), SystemController.initializeStock);

@@ -5,51 +5,31 @@ const StockController = {
   /**
    * Adjust stock manually with reason tracking
    * POST /api/stock/adjust
-   * Body: { productId, quantity, reason, notes }
-   * Reason: LOSS | FREE | ADJUSTMENT
+   * Body: { productId, storeId, quantity, reason, notes }
    */
   async adjust(req, res) {
     try {
-      const { productId, quantity, reason, notes } = req.body;
+      const { productId, storeId, quantity, reason, notes } = req.body;
 
       // Validation
-      if (!productId || quantity === undefined || !reason) {
+      if (!productId || !storeId || quantity === undefined || !reason) {
         return res.status(400).json({
-          error: 'Champs requis manquants: productId, quantity, reason'
+          error: 'Champs requis manquants: productId, storeId, quantity, reason'
         });
       }
 
-      const validReasons = ['LOSS', 'FREE', 'ADJUSTMENT'];
+      const validReasons = ['LOSS', 'FREE', 'ADJUSTMENT', 'TRANSFER'];
       if (!validReasons.includes(reason)) {
         return res.status(400).json({
           error: `Raison invalide. Doit être l'un des : ${validReasons.join(', ')}`
         });
       }
 
-      // Check if product exists
-      const product = await Product.findByPk(productId);
-      if (!product) {
-        return res.status(404).json({ error: 'Produit non trouvé' });
-      }
-
-      // Get current stock
-      const stock = await Stock.findOne({ where: { ProductId: productId } });
-      if (!stock) {
-        return res.status(404).json({ error: 'Enregistrement du stock non trouvé pour le produit' });
-      }
-
-      // Check if adjustment would result in negative stock
-      const newQuantity = stock.quantity + quantity;
-      if (newQuantity < 0) {
-        return res.status(400).json({
-          error: `Stock insuffisant. Actuel: ${stock.quantity}, Ajustement: ${quantity}`
-        });
-      }
-
       // Perform adjustment
       const userId = req.user ? req.user.id : null;
-      const movement = await StockService.adjustStock(
+      const updatedStock = await StockService.adjustStock(
         productId,
+        storeId,
         quantity,
         reason,
         notes,
@@ -58,8 +38,7 @@ const StockController = {
 
       res.status(200).json({
         message: 'Stock ajusté avec succès',
-        movement,
-        newQuantity
+        stock: updatedStock
       });
     } catch (e) {
       res.status(500).json({ error: e.message });
@@ -68,12 +47,13 @@ const StockController = {
 
   /**
    * Get stock movements for a product
-   * GET /api/stock/movements/:productId
+   * GET /api/stock/movements/:productId?storeId=...
    */
   async getMovements(req, res) {
     try {
       const { productId } = req.params;
-      const movements = await StockService.getStockMovements(productId);
+      const { storeId } = req.query;
+      const movements = await StockService.getStockMovements(productId, storeId);
       res.json(movements);
     } catch (e) {
       res.status(500).json({ error: e.message });

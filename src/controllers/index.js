@@ -6,16 +6,27 @@ const SaleService = require('../services/SaleService');
 const ReportService = require('../services/ReportService');
 const AuthService = require('../services/AuthService');
 const UserController = require('./UserController');
-const { Product, Category, Stock, Supplier, Sale, Purchase } = require('../models');
+const StoreController = require('./StoreController');
+const { Product, Category, Stock, Supplier, Sale, Purchase, Store } = require('../models');
 
 
 const ProductController = {
   async list(req, res) {
     try {
+      const { storeId } = req.query;
+      const stockInclude = {
+        model: Stock,
+        required: false
+      };
+
+      if (storeId) {
+        stockInclude.where = { StoreId: storeId };
+      }
+
       const products = await Product.findAll({
         include: [
           Category,
-          Stock,
+          stockInclude,
           { model: Supplier, required: false }
         ]
       });
@@ -114,8 +125,11 @@ const PurchaseController = {
 const SaleController = {
   async create(req, res) {
     try {
-      // Body: { items: [{ productId, quantity }], paymentMethod }
-      const sale = await SaleService.createSale(req.body);
+      // Body: { items: [{ productId, quantity }], paymentMethod, storeId }
+      const sale = await SaleService.createSale({
+        ...req.body,
+        userId: req.user ? req.user.id : null
+      });
       res.status(201).json(sale);
     } catch (e) { res.status(400).json({ error: e.message }); }
   },
@@ -148,6 +162,8 @@ const SaleController = {
               quantity: saleData.quantity
             }],
             paymentMethod: saleData.paymentMethod,
+            storeId: saleData.storeId || req.body.storeId, // Can be per item or global
+            userId: req.user ? req.user.id : null,
             notes: saleData.notes || `Bulk entry ${i + 1}`
           });
 
@@ -286,26 +302,28 @@ const AuthController = {
 const SystemController = {
   async initializeCash(req, res) {
     try {
-      const { amount } = req.body;
-      const result = await CashService.initializeBalance(amount, req.user.id);
+      const { amount, storeId } = req.body;
+      const result = await CashService.initializeBalance(amount, storeId, req.user.id);
       res.json(result);
     } catch (e) { res.status(500).json({ error: e.message }); }
   },
 
   async initializeStock(req, res) {
     try {
-      const { productId, quantity } = req.body;
-      const result = await StockService.initializeStock(productId, quantity, req.user.id);
+      const { productId, storeId, quantity } = req.body;
+      const result = await StockService.initializeStock(productId, storeId, quantity, req.user.id);
       res.json(result);
     } catch (e) { res.status(500).json({ error: e.message }); }
   },
 
   async payStaff(req, res) {
     try {
-      const { userId, amount, description } = req.body;
+      const { userId, storeId, amount, period, description } = req.body;
       const result = await CashService.payStaff({
         userId,
+        storeId,
         amount,
+        period,
         description,
         processedBy: req.user.id
       });
@@ -321,5 +339,6 @@ module.exports = {
   ReportController,
   AuthController,
   UserController,
+  StoreController,
   SystemController
 };
