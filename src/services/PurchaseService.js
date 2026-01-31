@@ -4,12 +4,14 @@ const CashService = require('./CashService');
 
 class PurchaseService {
 
-  static async createPurchase({ supplierId, items, notes }, userId) {
+  static async createPurchase({ supplierId, items, notes, storeId }, userId) {
+    if (!storeId) throw new Error('storeId est requis pour effectuer un achat');
     const transaction = await sequelize.transaction();
 
     try {
       const purchase = await Purchase.create({
         SupplierId: supplierId,
+        StoreId: storeId,
         status: 'COMPLETED',
         notes,
         totalCost: 0
@@ -41,17 +43,14 @@ class PurchaseService {
 
         await StockService.createMovement({
           productId,
+          storeId,
           type: 'IN',
           reason: 'PURCHASE',
           quantityChange: quantityInUnits,
           referenceId: purchase.id,
-          description: `Purchase of ${quantityBoxes} boxes`,
+          description: `Achat de ${quantityBoxes} cartons`,
           transaction
         });
-
-        // Optional: Update Product Purchase Price if changed?
-        // product.purchasePrice = unitPriceBox;
-        // await product.save({ transaction });
       }
 
       purchase.totalCost = totalCost;
@@ -59,6 +58,7 @@ class PurchaseService {
 
       // Record Cash Movement (handles balance check)
       await CashService.recordMovement({
+        storeId,
         type: 'OUT',
         amount: totalCost,
         reason: 'PURCHASE',
@@ -68,6 +68,7 @@ class PurchaseService {
 
       // Create Expense record for journal visibility
       await Expense.create({
+        StoreId: storeId,
         description: `Achat de boissons - Commande #${purchase.id.toString().substring(0, 8).toUpperCase()}`,
         amount: totalCost,
         date: new Date()

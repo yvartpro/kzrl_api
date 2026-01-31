@@ -18,6 +18,9 @@ Store.belongsToMany(User, { through: 'kzrl_user_stores' });
 Category.hasMany(Product);
 Product.belongsTo(Category);
 
+Store.hasMany(Category);
+Category.belongsTo(Store);
+
 // Product & Supplier
 Supplier.hasMany(Product);
 Product.belongsTo(Supplier);

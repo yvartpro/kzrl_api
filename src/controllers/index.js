@@ -10,22 +10,54 @@ const StoreController = require('./StoreController');
 const { Product, Category, Stock, Supplier, Sale, Purchase, Store } = require('../models');
 
 
+const CategoryController = {
+  async list(req, res) {
+    try {
+      const { storeId } = req.query;
+      const where = {};
+      if (storeId) {
+        where.StoreId = storeId;
+      }
+      const categories = await Category.findAll({ where, order: [['name', 'ASC']] });
+      res.json(categories);
+    } catch (e) {
+      res.status(500).json({ error: e.message });
+    }
+  },
+
+  async create(req, res) {
+    try {
+      const category = await Category.create(req.body);
+      res.status(201).json(category);
+    } catch (e) {
+      res.status(400).json({ error: e.message });
+    }
+  }
+};
+
 const ProductController = {
   async list(req, res) {
     try {
       const { storeId, filterByStock } = req.query;
+
       const stockInclude = {
         model: Stock,
         required: filterByStock === 'false' ? false : !!storeId
       };
 
+      const categoryInclude = {
+        model: Category,
+        required: !!storeId
+      };
+
       if (storeId) {
         stockInclude.where = { StoreId: storeId };
+        categoryInclude.where = { StoreId: storeId };
       }
 
       const products = await Product.findAll({
         include: [
-          Category,
+          categoryInclude,
           stockInclude,
           { model: Supplier, required: false }
         ]
@@ -36,8 +68,13 @@ const ProductController = {
 
   async create(req, res) {
     try {
-      const product = await Product.create(req.body);
-      await StockService.initStock(product.id); // Init stock
+      const { storeId, ...productData } = req.body;
+      const product = await Product.create(productData);
+      if (storeId) {
+        await StockService.initStock(product.id, storeId);
+      } else {
+        await StockService.initStock(product.id); // Fallback (might fail depending on constraint)
+      }
       res.status(201).json(product);
     } catch (e) { res.status(400).json({ error: e.message }); }
   },
@@ -348,6 +385,7 @@ const SystemController = {
 
 module.exports = {
   ProductController,
+  CategoryController,
   PurchaseController,
   SaleController,
   ReportController,

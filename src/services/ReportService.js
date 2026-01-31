@@ -164,7 +164,25 @@ class ReportService {
       where.name = { [Op.like]: `%${search}%` };
     }
 
-    const products = await Product.findAll({ where });
+    const productInclude = [
+      {
+        model: Category,
+        required: !!storeId,
+        where: storeId ? { StoreId: storeId } : {}
+      }
+    ];
+    if (storeId) {
+      productInclude.push({
+        model: Stock,
+        where: { StoreId: storeId },
+        required: true
+      });
+    }
+
+    const products = await Product.findAll({
+      where,
+      include: productInclude
+    });
 
     let totalValuation = 0;
     let totalPotentialRevenue = 0;

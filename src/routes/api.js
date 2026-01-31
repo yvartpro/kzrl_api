@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const {
-  ProductController, PurchaseController, SaleController, ReportController,
+  ProductController, CategoryController, PurchaseController, SaleController, ReportController,
   AuthController, UserController, SystemController, StoreController
 } = require('../controllers');
 const CashController = require('../controllers/CashController');
@@ -28,8 +28,8 @@ router.get('/products', ProductController.list);
 router.post('/products', authorize('ADMIN', 'MANAGER'), ProductController.create);
 router.patch('/products/:id', authorize('ADMIN', 'MANAGER'), ProductController.updateProduct);
 router.delete('/products/:id', authorize('ADMIN'), ProductController.deleteProduct);
-router.get('/categories', simpleCrud(Category).list);
-router.post('/categories', simpleCrud(Category).create);
+router.get('/categories', CategoryController.list);
+router.post('/categories', CategoryController.create);
 
 // Suppliers
 router.get('/suppliers', simpleCrud(Supplier).list);
