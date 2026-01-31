@@ -6,7 +6,7 @@ const StoreController = {
       // If the user is admin, they can see all stores
       // Otherwise, only stores they are assigned to
       let stores;
-      if (req.user.Role.name === 'ADMIN') {
+      if (req.user.role === 'ADMIN') {
         stores = await Store.findAll();
       } else {
         const userWithStores = await User.findByPk(req.user.id, {
