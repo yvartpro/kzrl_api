@@ -60,7 +60,7 @@ class ReportService {
   /**
    * Get paginated and searchable Journal (Sales + Expenses)
    */
-  static async getJournal({ date, page = 1, limit = 10, search = '' }) {
+  static async getJournal({ date, page = 1, limit = 10, search = '', storeId }) {
     const startOfDay = new Date(date);
     startOfDay.setHours(0, 0, 0, 0);
 
