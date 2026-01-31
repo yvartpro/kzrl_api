@@ -153,7 +153,16 @@ const PurchaseController = {
   },
   async list(req, res) {
     try {
-      const purchases = await Purchase.findAll({ include: [Supplier], order: [['createdAt', 'DESC']] });
+      const { storeId } = req.query;
+      const where = {};
+      if (storeId) {
+        where.StoreId = storeId;
+      }
+      const purchases = await Purchase.findAll({
+        where,
+        include: [Supplier],
+        order: [['createdAt', 'DESC']]
+      });
       res.json(purchases);
     } catch (e) { res.status(500).json({ error: e.message }); }
   }

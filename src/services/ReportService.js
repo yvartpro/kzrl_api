@@ -1,4 +1,4 @@
-const { sequelize, Sale, SaleItem, Stock, Product, Expense, StockMovement } = require('../models');
+const { sequelize, Sale, SaleItem, Stock, Product, Category, Expense, StockMovement } = require('../models');
 const { Op } = require('sequelize');
 
 class ReportService {
@@ -256,25 +256,41 @@ class ReportService {
     const liquidAssets = await CashService.getBalance(storeId);
 
     // Calculate stock valuation (Cost Basis)
-    const products = await Product.findAll();
+    const productInclude = [
+      {
+        model: Stock,
+        required: false
+      }
+    ];
+
+    if (storeId) {
+      productInclude.push({
+        model: Category,
+        where: { StoreId: storeId },
+        required: true
+      });
+      // Filter the Stocks include as well
+      productInclude[0].where = { StoreId: storeId };
+      productInclude[0].required = true;
+    }
+
+    const products = await Product.findAll({ include: productInclude });
     let stockValue = 0;
 
     for (const product of products) {
-      const stockWhere = { ProductId: product.id };
-      if (storeId) {
-        stockWhere.StoreId = storeId;
-      }
-      const stock = await Stock.findOne({ where: stockWhere });
-      if (stock && stock.quantity > 0) {
+      const stocks = product.Stocks || [];
+      const totalQuantity = stocks.reduce((sum, s) => sum + (s.quantity || 0), 0);
+
+      if (totalQuantity > 0) {
         const unitCost = parseFloat(product.purchasePrice) / (product.unitsPerBox || 1);
-        stockValue += stock.quantity * unitCost;
+        stockValue += totalQuantity * unitCost;
       }
     }
 
     return {
       liquidAssets,
       stockValue,
-      globalCapital: liquidAssets + stockValue
+      globalCapital: parseFloat(liquidAssets) + stockValue
     };
   }
 }
