@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const { ProductController, PurchaseController, SaleController, ReportController, AuthController, UserController, SystemController } = require('../controllers');
+const {
+  ProductController, PurchaseController, SaleController, ReportController,
+  AuthController, UserController, SystemController, StoreController
+} = require('../controllers');
 const CashController = require('../controllers/CashController');
 const StockController = require('../controllers/StockController');
 const { Category, Supplier } = require('../models');
