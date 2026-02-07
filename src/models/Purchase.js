@@ -20,7 +20,7 @@ const Purchase = sequelize.define('Purchase', {
 
 const PurchaseItem = sequelize.define('PurchaseItem', {
   id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true, },
-  quantityPurchased: { type: DataTypes.INTEGER, allowNull: false, comment: 'Nombre de lots achetés', },
+  quantityPurchased: { type: DataTypes.DECIMAL(12, 4), allowNull: false, comment: 'Nombre de lots achetés', },
   unitPrice: { type: DataTypes.DECIMAL(10, 2), allowNull: false, comment: 'Prix unitaire', },
   totalPrice: { type: DataTypes.DECIMAL(10, 2), allowNull: false, },
 }, {

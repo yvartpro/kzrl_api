@@ -41,11 +41,11 @@ class StockService {
       return await this.createMovement({ productId, storeId, type, reason, quantityChange, referenceId, description, transaction });
     }
 
-    const previousQuantity = stock.quantity;
-    const newQuantity = previousQuantity + quantityChange;
+    const previousQuantity = Number(stock.quantity);
+    const newQuantity = previousQuantity + Number(quantityChange);
 
     // Business Rule: No negative stock
-    if (newQuantity < 0) {
+    if (newQuantity < -0.0001) { // Allowance for precision
       const product = await Product.findByPk(productId, { transaction });
       throw new Error(`Stock insuffisant au dépôt sélectionné pour ${product ? product.name : productId}. Actuel: ${previousQuantity}, Demandé: ${Math.abs(quantityChange)}`);
     }

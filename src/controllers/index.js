@@ -8,7 +8,7 @@ const AuthService = require('../services/AuthService');
 const UserController = require('./UserController');
 const StoreController = require('./StoreController');
 const EquipmentController = require('./EquipmentController');
-const { Product, Category, Stock, Supplier, Sale, Purchase, Store } = require('../models');
+const { Product, Category, Stock, Supplier, Sale, Purchase, Store, ProductComposition, sequelize } = require('../models');
 
 
 const CategoryController = {
@@ -60,7 +60,8 @@ const ProductController = {
         include: [
           categoryInclude,
           stockInclude,
-          { model: Supplier, required: false }
+          { model: Supplier, required: false },
+          { model: ProductComposition, as: 'compositions', include: [{ model: Product, as: 'ingredient' }] }
         ]
       });
       res.json(products);
@@ -68,25 +69,44 @@ const ProductController = {
   },
 
   async create(req, res) {
+    const transaction = await sequelize.transaction();
     try {
-      const { storeId, ...productData } = req.body;
-      const product = await Product.create(productData);
+      const { storeId, compositions, ...productData } = req.body;
+      const product = await Product.create(productData, { transaction });
+
       if (storeId) {
-        await StockService.initStock(product.id, storeId);
-      } else {
-        await StockService.initStock(product.id); // Fallback (might fail depending on constraint)
+        await StockService.initStock(product.id, storeId, transaction);
       }
+
+      if (compositions && Array.isArray(compositions)) {
+        const compData = compositions.map(c => ({
+          parentProductId: product.id,
+          componentProductId: c.componentProductId,
+          quantity: c.quantity
+        }));
+        await ProductComposition.bulkCreate(compData, { transaction });
+      }
+
+      await transaction.commit();
       res.status(201).json(product);
-    } catch (e) { res.status(400).json({ error: e.message }); }
+    } catch (e) {
+      await transaction.rollback();
+      res.status(400).json({ error: e.message });
+    }
   },
 
   async updateProduct(req, res) {
+    const transaction = await sequelize.transaction();
     try {
       const { id } = req.params;
-      const { name, categoryId, supplierId, boxQuantity, unitsPerBox, unitCost, purchasePrice, sellingPrice } = req.body;
+      const {
+        name, categoryId, supplierId, unitsPerBox, purchasePrice, sellingPrice,
+        type, nature, compositions
+      } = req.body;
 
-      const product = await Product.findByPk(id);
+      const product = await Product.findByPk(id, { transaction });
       if (!product) {
+        await transaction.rollback();
         return res.status(404).json({ error: 'Product not found' });
       }
 
@@ -94,31 +114,41 @@ const ProductController = {
       if (name !== undefined) updates.name = name;
       if (categoryId !== undefined) updates.CategoryId = categoryId;
       if (supplierId !== undefined) updates.SupplierId = supplierId;
-      if (boxQuantity !== undefined) updates.boxQuantity = boxQuantity;
       if (unitsPerBox !== undefined) updates.unitsPerBox = unitsPerBox;
       if (purchasePrice !== undefined) updates.purchasePrice = purchasePrice;
+      if (sellingPrice !== undefined) updates.sellingPrice = sellingPrice;
+      if (type !== undefined) updates.type = type;
+      if (nature !== undefined) updates.nature = nature;
 
-      // Also allow updating via unitCost for backward compatibility or alternative logic
-      if (unitCost !== undefined && purchasePrice === undefined) {
-        const conversion = unitsPerBox !== undefined ? unitsPerBox : product.unitsPerBox;
-        updates.purchasePrice = parseFloat(unitCost) * parseFloat(conversion);
+      await product.update(updates, { transaction });
+
+      // Update Compositions if provided
+      if (compositions && Array.isArray(compositions)) {
+        // Simple approach: Delete existing and recreate
+        await ProductComposition.destroy({ where: { parentProductId: id }, transaction });
+        const compData = compositions.map(c => ({
+          parentProductId: id,
+          componentProductId: c.componentProductId,
+          quantity: c.quantity
+        }));
+        await ProductComposition.bulkCreate(compData, { transaction });
       }
 
-      if (sellingPrice !== undefined) updates.sellingPrice = sellingPrice;
-
-      await product.update(updates);
+      await transaction.commit();
 
       // Fetch updated product with associations
       const updatedProduct = await Product.findByPk(id, {
         include: [
           { model: Category, attributes: ['id', 'name'] },
           { model: Supplier, attributes: ['id', 'name'] },
-          { model: Stock, attributes: ['quantity'] }
+          { model: Stock, attributes: ['quantity'] },
+          { model: ProductComposition, as: 'compositions', include: [{ model: Product, as: 'ingredient' }] }
         ]
       });
 
       res.json(updatedProduct);
     } catch (error) {
+      await transaction.rollback();
       console.error('Update product error:', error);
       res.status(500).json({ error: error.message });
     }

@@ -39,7 +39,7 @@ class PurchaseService {
         }, { transaction });
 
         // Update Stock (Convert BOX -> UNITS)
-        const quantityInUnits = quantityBoxes * product.unitsPerBox;
+        const quantityInUnits = Number(quantityBoxes) * Number(product.unitsPerBox);
 
         await StockService.createMovement({
           productId,

@@ -7,6 +7,7 @@ const { Supplier, Purchase, PurchaseItem } = require('./Purchase');
 const { Sale, SaleItem } = require('./Sale');
 const { CashRegister, CashMovement, Expense, SalaryPayment } = require('./Cash');
 const { EquipmentCategory, Equipment, EquipmentInventory, EquipmentInventoryItem } = require('./Equipment');
+const ProductComposition = require('./Composition');
 
 // User, Role & Store
 Role.hasMany(User);
@@ -18,6 +19,12 @@ Store.belongsToMany(User, { through: 'kzrl_user_stores' });
 // Product & Category
 Category.hasMany(Product);
 Product.belongsTo(Category);
+
+Product.hasMany(ProductComposition, { as: 'compositions', foreignKey: 'parentProductId' });
+ProductComposition.belongsTo(Product, { as: 'parentProduct', foreignKey: 'parentProductId' });
+
+Product.hasMany(ProductComposition, { as: 'ingredientIn', foreignKey: 'componentProductId' });
+ProductComposition.belongsTo(Product, { as: 'ingredient', foreignKey: 'componentProductId' });
 
 Store.hasMany(Category);
 Category.belongsTo(Store);
@@ -130,5 +137,6 @@ module.exports = {
   Supplier, Purchase, PurchaseItem,
   Sale, SaleItem,
   CashRegister, CashMovement, Expense, SalaryPayment,
-  EquipmentCategory, Equipment, EquipmentInventory, EquipmentInventoryItem
+  EquipmentCategory, Equipment, EquipmentInventory, EquipmentInventoryItem,
+  ProductComposition
 };

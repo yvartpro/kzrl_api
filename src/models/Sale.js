@@ -13,7 +13,7 @@ const Sale = sequelize.define('Sale', {
 const SaleItem = sequelize.define('SaleItem', {
   id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true, },
   // Linked to Sale and Product
-  quantity: { type: DataTypes.INTEGER, allowNull: false, comment: 'Quantité en BASE UNITS (e.g. bouteilles) vendues', },
+  quantity: { type: DataTypes.DECIMAL(12, 4), allowNull: false, comment: 'Quantité en BASE UNITS vendue', },
   unitPrice: { type: DataTypes.DECIMAL(10, 2), allowNull: false, comment: 'Prix unitaire', },
   subTotal: { type: DataTypes.DECIMAL(10, 2), allowNull: false, },
   // Profit tracking
