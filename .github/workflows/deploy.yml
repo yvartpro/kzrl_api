@@ -21,7 +21,7 @@ jobs:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          server-dir: ${{ secrets.FTP_SERVER_DIR || '/kzrl/' }}
+          server-dir: ${{ secrets.FTP_SERVER_DIR || '/' }}
           exclude: |
             **/.git*
             **/.git*/**
@@ -33,4 +33,3 @@ jobs:
             **/check_*.js
             **/migrate_*.js
             **/seed.js
-            **/sync.js
