@@ -1,0 +1,36 @@
+name: Deploy KZRL API via FTP
+
+on:
+  push:
+    branches:
+      - deploy
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to Server
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: ${{ secrets.FTP_SERVER_DIR || '/kzrl/' }}
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/.env
+            **/database.sqlite
+            **/.github/**
+            **/README.md
+            **/verify_*.js
+            **/check_*.js
+            **/migrate_*.js
+            **/seed.js
+            **/sync.js
