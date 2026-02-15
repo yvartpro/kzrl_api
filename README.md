@@ -266,4 +266,4 @@ Key relationships:
 
 ## 📝 License
 
-ISC
+MIT
