@@ -21,7 +21,7 @@ class SaleService {
       let totalAmount = 0;
 
       for (const item of items) {
-        const { productId, quantity } = item;
+        const { productId, quantity, isBulk } = item;
 
         const product = await Product.findByPk(productId, {
           include: [{ model: ProductComposition, as: 'compositions' }],
@@ -29,12 +29,14 @@ class SaleService {
         });
         if (!product) throw new Error(`Product ${productId} not found`);
 
-        const unitPrice = parseFloat(product.sellingPrice);
+        // Sale price and cost logic
+        const conversionFactor = isBulk ? Number(product.unitsPerBox) : 1;
+        const totalBaseUnits = Number(quantity) * conversionFactor;
+
+        const unitPrice = isBulk ? parseFloat(product.sellingPrice) * conversionFactor : parseFloat(product.sellingPrice);
         const subTotal = unitPrice * quantity;
         totalAmount += subTotal;
 
-        // Calculate Cost Snapshot for Profit (Weighted Average or Current Cost)
-        // For simplicity, using current purchase unit cost
         const unitCost = Number(product.purchasePrice) / Number(product.unitsPerBox);
 
         await SaleItem.create({
@@ -43,19 +45,20 @@ class SaleService {
           quantity,
           unitPrice,
           subTotal,
-          unitCostSnapshot: unitCost
+          unitCostSnapshot: unitCost,
+          isBulk: !!isBulk
         }, { transaction });
 
         // Stock Deduction Logic
         if (product.compositions && product.compositions.length > 0) {
-          // Deduct Ingredients
+          // Deduct Ingredients (Composition is always in BASE UNITS of ingredients)
           for (const comp of product.compositions) {
             await StockService.createMovement({
               productId: comp.componentProductId,
               storeId,
               type: 'OUT',
               reason: 'SALE',
-              quantityChange: -(Number(comp.quantity) * Number(quantity)),
+              quantityChange: -(Number(comp.quantity) * totalBaseUnits),
               referenceId: sale.id,
               description: `Consommation pour ${product.name} (Vente #${sale.id.slice(0, 8)})`,
               transaction
@@ -68,9 +71,9 @@ class SaleService {
             storeId,
             type: 'OUT',
             reason: 'SALE',
-            quantityChange: -quantity,
+            quantityChange: -totalBaseUnits,
             referenceId: sale.id,
-            description: `Vente POS`,
+            description: `Vente POS (${isBulk ? 'Gros' : 'Détail'})`,
             transaction
           });
         }

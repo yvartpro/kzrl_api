@@ -20,9 +20,10 @@ const Purchase = sequelize.define('Purchase', {
 
 const PurchaseItem = sequelize.define('PurchaseItem', {
   id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true, },
-  quantityPurchased: { type: DataTypes.DECIMAL(12, 4), allowNull: false, comment: 'Nombre de lots achetés', },
-  unitPrice: { type: DataTypes.DECIMAL(10, 2), allowNull: false, comment: 'Prix unitaire', },
+  quantityPurchased: { type: DataTypes.DECIMAL(10, 4), allowNull: false, },
+  unitPrice: { type: DataTypes.DECIMAL(10, 2), allowNull: false, },
   totalPrice: { type: DataTypes.DECIMAL(10, 2), allowNull: false, },
+  isBulk: { type: DataTypes.BOOLEAN, defaultValue: false },
 }, {
   tableName: 'kzrl_purchase_items'
 });

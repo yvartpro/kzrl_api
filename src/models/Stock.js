@@ -4,6 +4,7 @@ const sequelize = require('../config/database');
 const Stock = sequelize.define('Stock', {
   id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true, },
   quantity: { type: DataTypes.DECIMAL(12, 4), allowNull: false, defaultValue: 0, comment: 'Stock actuel en base UNITS', },
+  minStockLevel: { type: DataTypes.DECIMAL(12, 4), allowNull: true, comment: 'Seuil d\'alerte spécifique au dépôt. Si nul, utilise celui du produit.', },
 }, {
   tableName: 'kzrl_stocks',
   indexes: [

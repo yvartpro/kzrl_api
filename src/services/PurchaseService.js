@@ -20,35 +20,36 @@ class PurchaseService {
       let totalCost = 0;
 
       for (const item of items) {
-        const { productId, quantityBoxes, unitPriceBox } = item;
+        const { productId, quantity, unitPrice, isBulk } = item;
 
         // Fetch product for conversion info
         const product = await Product.findByPk(productId, { transaction });
         if (!product) throw new Error(`Product ${productId} not found`);
 
-        // Create Purchase Item
-        const lineTotal = quantityBoxes * unitPriceBox;
-        totalCost += lineTotal;
+        // If isBulk is true, quantity is in purchaseUnits (e.g. crates/kg). 
+        // If false, quantity is in baseUnits (e.g. bottles/units).
+        const conversionFactor = isBulk ? Number(product.unitsPerBox) : 1;
+        const totalBaseUnits = Number(quantity) * conversionFactor;
+        const totalPrice = Number(quantity) * Number(unitPrice);
+        totalCost += totalPrice;
 
         await PurchaseItem.create({
           PurchaseId: purchase.id,
           ProductId: productId,
-          quantityPurchased: quantityBoxes,
-          unitPrice: unitPriceBox,
-          totalPrice: lineTotal
+          quantityPurchased: quantity,
+          unitPrice: unitPrice,
+          totalPrice: totalPrice,
+          isBulk: !!isBulk // Useful for audit
         }, { transaction });
-
-        // Update Stock (Convert BOX -> UNITS)
-        const quantityInUnits = Number(quantityBoxes) * Number(product.unitsPerBox);
 
         await StockService.createMovement({
           productId,
           storeId,
           type: 'IN',
           reason: 'PURCHASE',
-          quantityChange: quantityInUnits,
+          quantityChange: totalBaseUnits,
           referenceId: purchase.id,
-          description: `Achat de ${quantityBoxes} cartons`,
+          description: `Achat de ${quantity} ${isBulk ? product.purchaseUnit : product.baseUnit}`,
           transaction
         });
       }

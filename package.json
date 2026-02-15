@@ -7,6 +7,7 @@
     "start": "node app.js",
     "dev": "node app.js",
     "sync": "node sync.js",
+    "seed": "node seed.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

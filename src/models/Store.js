@@ -13,8 +13,8 @@ const Store = sequelize.define('Store', {
     unique: true,
   },
   type: {
-    type: DataTypes.ENUM('BAR', 'CUISINE', 'STORE', 'WAREHOUSE'),
-    defaultValue: 'STORE',
+    type: DataTypes.ENUM('BAR', 'CUISINE', 'BOUTIQUE', 'WAREHOUSE'),
+    defaultValue: 'BOUTIQUE',
     allowNull: false,
   },
   description: {

@@ -12,12 +12,11 @@ const Sale = sequelize.define('Sale', {
 
 const SaleItem = sequelize.define('SaleItem', {
   id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true, },
-  // Linked to Sale and Product
-  quantity: { type: DataTypes.DECIMAL(12, 4), allowNull: false, comment: 'Quantité en BASE UNITS vendue', },
-  unitPrice: { type: DataTypes.DECIMAL(10, 2), allowNull: false, comment: 'Prix unitaire', },
+  quantity: { type: DataTypes.DECIMAL(10, 4), allowNull: false, },
+  unitPrice: { type: DataTypes.DECIMAL(10, 2), allowNull: false, },
   subTotal: { type: DataTypes.DECIMAL(10, 2), allowNull: false, },
-  // Profit tracking
-  unitCostSnapshot: { type: DataTypes.DECIMAL(10, 2), allowNull: false, comment: 'Prix unitaire au moment de la vente (pour les rapports de profit)', },
+  unitCostSnapshot: { type: DataTypes.DECIMAL(10, 2), allowNull: false, },
+  isBulk: { type: DataTypes.BOOLEAN, defaultValue: false },
 }, {
   tableName: 'kzrl_sale_items'
 });

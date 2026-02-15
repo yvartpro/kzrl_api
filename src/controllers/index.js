@@ -119,6 +119,7 @@ const ProductController = {
       if (sellingPrice !== undefined) updates.sellingPrice = sellingPrice;
       if (type !== undefined) updates.type = type;
       if (nature !== undefined) updates.nature = nature;
+      if (req.body.minStockLevel !== undefined) updates.minStockLevel = req.body.minStockLevel;
 
       await product.update(updates, { transaction });
 
@@ -318,11 +319,15 @@ const ReportController = {
         const margin = sellingPrice - unitCost;
         const marginPercent = unitCost > 0 ? ((margin / unitCost) * 100).toFixed(2) : 0;
 
-        // Determine status
+        // Determine status using dynamic thresholds
+        const threshold = stocks[0]?.minStockLevel !== null && stocks[0]?.minStockLevel !== undefined
+          ? parseFloat(stocks[0].minStockLevel)
+          : parseFloat(product.minStockLevel || 0);
+
         let status = 'OK';
-        if (quantity === 0) {
+        if (quantity <= 0) {
           status = 'OUT';
-        } else if (quantity <= 10) {
+        } else if (quantity <= threshold) {
           status = 'LOW';
         }
 
