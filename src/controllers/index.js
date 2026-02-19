@@ -41,25 +41,18 @@ const ProductController = {
     try {
       const { storeId, filterByStock } = req.query;
 
-      const stockInclude = {
-        model: Stock,
-        required: filterByStock === 'false' ? false : !!storeId
-      };
-
-      const categoryInclude = {
-        model: Category,
-        required: !!storeId
-      };
-
-      if (storeId) {
-        stockInclude.where = { StoreId: storeId };
-        categoryInclude.where = { StoreId: storeId };
-      }
-
       const products = await Product.findAll({
         include: [
-          categoryInclude,
-          stockInclude,
+          {
+            model: Category,
+            required: false // ALWAYS false so we don't hide products with CategoryId = NULL
+          },
+          {
+            model: Stock,
+            where: storeId ? { StoreId: storeId } : undefined,
+            // If storeId is provided, we MUST require the stock entry to filter products by store
+            required: filterByStock === 'false' ? false : !!storeId
+          },
           { model: Supplier, required: false },
           { model: ProductComposition, as: 'compositions', include: [{ model: Product, as: 'ingredient' }] }
         ]
@@ -245,10 +238,11 @@ const SaleController = {
           const sale = await SaleService.createSale({
             items: [{
               productId: saleData.productId,
-              quantity: saleData.quantity
+              quantity: saleData.quantity,
+              isBulk: saleData.isBulk // PASSING THE MISSING FLAG
             }],
             paymentMethod: saleData.paymentMethod,
-            storeId: saleData.storeId || req.body.storeId, // Can be per item or global
+            storeId: saleData.storeId || req.body.storeId,
             userId: req.user ? req.user.id : null,
             notes: saleData.notes || `Bulk entry ${i + 1}`
           });
