@@ -71,8 +71,13 @@ const ProductController = {
   async create(req, res) {
     const transaction = await sequelize.transaction();
     try {
-      const { storeId, compositions, ...productData } = req.body;
-      const product = await Product.create(productData, { transaction });
+      const { storeId, compositions, categoryId, supplierId, ...productData } = req.body;
+
+      const product = await Product.create({
+        ...productData,
+        CategoryId: categoryId || null,
+        SupplierId: supplierId || null
+      }, { transaction });
 
       if (storeId) {
         await StockService.initStock(product.id, storeId, transaction);
