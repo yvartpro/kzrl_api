@@ -8,7 +8,8 @@ const AuthService = require('../services/AuthService');
 const UserController = require('./UserController');
 const StoreController = require('./StoreController');
 const EquipmentController = require('./EquipmentController');
-const { Product, Category, Stock, Supplier, Sale, Purchase, Store, ProductComposition, sequelize } = require('../models');
+const { Product, Category, Stock, Supplier, Sale, Purchase, Store, ProductComposition, Unit, sequelize } = require('../models');
+const UnitController = require('./UnitController');
 
 
 const CategoryController = {
@@ -28,7 +29,11 @@ const CategoryController = {
 
   async create(req, res) {
     try {
-      const category = await Category.create(req.body);
+      const { name, storeId, StoreId } = req.body;
+      const category = await Category.create({
+        name,
+        StoreId: StoreId || storeId
+      });
       res.status(201).json(category);
     } catch (e) {
       res.status(400).json({ error: e.message });
@@ -38,50 +43,63 @@ const CategoryController = {
 
 const ProductController = {
   async list(req, res) {
+    const { Op } = require('sequelize');
     try {
-      const { storeId } = req.query;
+      const { storeId, filterByStock } = req.query;
+
+      const where = {};
+      if (storeId) {
+        where[Op.or] = [
+          { '$Category.StoreId$': storeId },
+          { '$Stocks.StoreId$': storeId }
+        ];
+      }
+
+      const include = [
+        {
+          model: Category,
+          required: false
+        },
+        { model: Supplier, required: false },
+        {
+          model: ProductComposition,
+          as: 'compositions',
+          include: [{ model: Product, as: 'ingredient' }]
+        },
+        {
+          model: Stock,
+          as: 'Stocks',
+          where: storeId ? { StoreId: storeId } : undefined,
+          required: filterByStock !== 'false' && !!storeId
+        }
+      ];
 
       const products = await Product.findAll({
-        include: [
-          {
-            model: Category,
-            required: false
-          },
-          {
-            model: Stock,
-            where: storeId ? { StoreId: storeId } : undefined,
-            required: !!storeId
-          },
-          {
-            model: Supplier,
-            required: false
-          },
-          {
-            model: ProductComposition,
-            as: 'compositions',
-            include: [
-              { model: Product, as: 'ingredient' }
-            ]
-          }
-        ]
+        where,
+        include,
+        subQuery: false
       });
-
       res.json(products);
-    } catch (e) {
-      res.status(500).json({ error: e.message });
-    }
+    } catch (e) { res.status(500).json({ error: e.message }); }
   },
 
 
   async create(req, res) {
     const transaction = await sequelize.transaction();
     try {
-      const { storeId, compositions, categoryId, supplierId, ...productData } = req.body;
+      const { storeId, compositions, categoryId, supplierId, unitId, unitName, ...productData } = req.body;
+
+      let finalUnitId = unitId;
+      if (!finalUnitId && unitName) {
+        const [unit] = await Unit.findOrCreate({ where: { name: unitName.trim() }, transaction });
+        finalUnitId = unit.id;
+      }
 
       const product = await Product.create({
         ...productData,
         CategoryId: categoryId || null,
-        SupplierId: supplierId || null
+        SupplierId: supplierId || null,
+        UnitId: finalUnitId || null
       }, { transaction });
 
       if (storeId) {
@@ -91,7 +109,7 @@ const ProductController = {
       if (compositions && Array.isArray(compositions)) {
         const compData = compositions.map(c => ({
           parentProductId: product.id,
-          componentProductId: c.compontransactionentProductId,
+          componentProductId: c.componentProductId,
           quantity: c.quantity
         }));
         await ProductComposition.bulkCreate(compData, { transaction });
@@ -110,7 +128,7 @@ const ProductController = {
     try {
       const { id } = req.params;
       const {
-        name, categoryId, supplierId, unitsPerBox, purchasePrice, sellingPrice,
+        name, categoryId, supplierId, unitId, unitName, unitsPerBox, purchasePrice, sellingPrice,
         type, nature, compositions
       } = req.body;
 
@@ -120,10 +138,17 @@ const ProductController = {
         return res.status(404).json({ error: 'Product not found' });
       }
 
+      let finalUnitId = unitId;
+      if (!finalUnitId && unitName) {
+        const [unit] = await Unit.findOrCreate({ where: { name: unitName.trim() }, transaction });
+        finalUnitId = unit.id;
+      }
+
       const updates = {};
       if (name !== undefined) updates.name = name;
       if (categoryId !== undefined) updates.CategoryId = categoryId;
       if (supplierId !== undefined) updates.SupplierId = supplierId;
+      if (finalUnitId !== undefined) updates.UnitId = finalUnitId;
       if (unitsPerBox !== undefined) updates.unitsPerBox = unitsPerBox;
       if (purchasePrice !== undefined) updates.purchasePrice = purchasePrice;
       if (sellingPrice !== undefined) updates.sellingPrice = sellingPrice;
@@ -449,5 +474,6 @@ module.exports = {
   UserController,
   StoreController,
   SystemController,
-  EquipmentController
+  EquipmentController,
+  UnitController
 };

@@ -2,7 +2,8 @@ const express = require('express');
 const router = express.Router();
 const {
   ProductController, CategoryController, PurchaseController, SaleController, ReportController,
-  AuthController, UserController, SystemController, StoreController, EquipmentController
+  AuthController, UserController, SystemController, StoreController, EquipmentController,
+  UnitController
 } = require('../controllers');
 const CashController = require('../controllers/CashController');
 const StockController = require('../controllers/StockController');
@@ -30,6 +31,10 @@ router.patch('/products/:id', authorize('ADMIN', 'MANAGER'), ProductController.u
 router.delete('/products/:id', authorize('ADMIN'), ProductController.deleteProduct);
 router.get('/categories', CategoryController.list);
 router.post('/categories', CategoryController.create);
+
+// Units
+router.get('/units', UnitController.list);
+router.post('/units', authorize('ADMIN', 'MANAGER'), UnitController.create);
 
 // Suppliers
 router.get('/suppliers', simpleCrud(Supplier).list);

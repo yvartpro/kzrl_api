@@ -8,6 +8,7 @@ const { Sale, SaleItem } = require('./Sale');
 const { CashRegister, CashMovement, Expense, SalaryPayment } = require('./Cash');
 const { EquipmentCategory, Equipment, EquipmentInventory, EquipmentInventoryItem } = require('./Equipment');
 const ProductComposition = require('./Composition');
+const Unit = require('./Unit');
 
 // User, Role & Store
 Role.hasMany(User);
@@ -28,6 +29,10 @@ ProductComposition.belongsTo(Product, { as: 'ingredient', foreignKey: 'component
 
 Store.hasMany(Category);
 Category.belongsTo(Store);
+
+// Units
+Unit.hasMany(Product);
+Product.belongsTo(Unit);
 // Equipment & Category
 Store.hasMany(EquipmentCategory);
 EquipmentCategory.belongsTo(Store);
@@ -138,5 +143,5 @@ module.exports = {
   Sale, SaleItem,
   CashRegister, CashMovement, Expense, SalaryPayment,
   EquipmentCategory, Equipment, EquipmentInventory, EquipmentInventoryItem,
-  ProductComposition
+  ProductComposition, Unit
 };
