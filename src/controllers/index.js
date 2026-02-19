@@ -39,27 +39,39 @@ const CategoryController = {
 const ProductController = {
   async list(req, res) {
     try {
-      const { storeId, filterByStock } = req.query;
+      const { storeId } = req.query;
 
       const products = await Product.findAll({
         include: [
           {
             model: Category,
-            required: false // ALWAYS false so we don't hide products with CategoryId = NULL
+            required: false
           },
           {
             model: Stock,
             where: storeId ? { StoreId: storeId } : undefined,
-            // If storeId is provided, we MUST require the stock entry to filter products by store
-            required: filterByStock === 'false' ? false : !!storeId
+            required: !!storeId
           },
-          { model: Supplier, required: false },
-          { model: ProductComposition, as: 'compositions', include: [{ model: Product, as: 'ingredient' }] }
+          {
+            model: Supplier,
+            required: false
+          },
+          {
+            model: ProductComposition,
+            as: 'compositions',
+            include: [
+              { model: Product, as: 'ingredient' }
+            ]
+          }
         ]
       });
+
       res.json(products);
-    } catch (e) { res.status(500).json({ error: e.message }); }
+    } catch (e) {
+      res.status(500).json({ error: e.message });
+    }
   },
+
 
   async create(req, res) {
     const transaction = await sequelize.transaction();
@@ -79,7 +91,7 @@ const ProductController = {
       if (compositions && Array.isArray(compositions)) {
         const compData = compositions.map(c => ({
           parentProductId: product.id,
-          componentProductId: c.componentProductId,
+          componentProductId: c.compontransactionentProductId,
           quantity: c.quantity
         }));
         await ProductComposition.bulkCreate(compData, { transaction });
