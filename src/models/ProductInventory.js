@@ -4,7 +4,7 @@ const sequelize = require('../config/database');
 const ProductInventory = sequelize.define('ProductInventory', {
   id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
   date: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
-  status: { type: DataTypes.ENUM('OUVERT', 'FERME'), defaultValue: 'OUVERT' },
+  status: { type: DataTypes.ENUM('OPEN', 'CLOSED'), defaultValue: 'OPEN' },
   notes: { type: DataTypes.TEXT },
 }, {
   tableName: 'kzrl_product_inventories'

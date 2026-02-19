@@ -116,7 +116,8 @@ const InventoryController = {
 
       await item.update({
         actualCrates: actualCrates !== undefined ? actualCrates : item.actualCrates,
-        actualBottles: actualBottles !== undefined ? actualBottles : item.actualBottles
+        actualBottles: actualBottles !== undefined ? actualBottles : item.actualBottles,
+        purchasePriceSnapshot: req.body.purchasePriceSnapshot !== undefined ? req.body.purchasePriceSnapshot : item.purchasePriceSnapshot
       });
 
       res.json(item);
@@ -141,8 +142,10 @@ const InventoryController = {
       if (inventory.status === 'CLOSED') throw new Error('Inventaire déjà clôturé');
 
       for (const item of inventory.ProductInventoryItems) {
-        const actualTotal = (Number(item.actualCrates) * Number(item.unitsPerBoxSnapshot)) + Number(item.actualBottles);
-        const difference = actualTotal - Number(item.expectedQuantity);
+        const unitsPerBox = Math.round(Number(item.unitsPerBoxSnapshot)) || 1;
+        const actualTotal = (Math.round(Number(item.actualCrates)) * unitsPerBox) + Math.round(Number(item.actualBottles));
+        const expectedTotal = Math.round(Number(item.expectedQuantity));
+        const difference = actualTotal - expectedTotal;
 
         if (difference !== 0) {
           await StockService.createMovement({
