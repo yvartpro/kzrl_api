@@ -12,6 +12,7 @@ const Equipment = sequelize.define('Equipment', {
   id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
   name: { type: DataTypes.STRING, allowNull: false },
   description: { type: DataTypes.TEXT },
+  unitPrice: { type: DataTypes.DECIMAL(10, 2), defaultValue: 0, comment: 'Purchase price per unit' },
   quantity: { type: DataTypes.INTEGER, defaultValue: 0, allowNull: false, comment: 'Current available quantity' }
 }, {
   tableName: 'kzrl_equipments'
@@ -31,6 +32,7 @@ const EquipmentInventoryItem = sequelize.define('EquipmentInventoryItem', {
   expectedQuantity: { type: DataTypes.INTEGER, allowNull: false },
   actualQuantity: { type: DataTypes.INTEGER, allowNull: false },
   condition: { type: DataTypes.ENUM('GOOD', 'DAMAGED', 'LOST'), defaultValue: 'GOOD' },
+  unitPriceSnapshot: { type: DataTypes.DECIMAL(10, 2), comment: 'Price per unit at time of inventory' },
   notes: { type: DataTypes.TEXT }
 }, {
   tableName: 'kzrl_equipment_inventory_items'

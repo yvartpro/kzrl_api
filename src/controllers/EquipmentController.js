@@ -38,13 +38,14 @@ const EquipmentController = {
 
   async createEquipment(req, res) {
     try {
-      const { name, description, categoryId, storeId, quantity } = req.body;
+      const { name, description, categoryId, storeId, quantity, unitPrice } = req.body;
       const equipment = await Equipment.create({
         name,
         description,
         EquipmentCategoryId: categoryId,
         StoreId: storeId,
-        quantity: quantity || 0
+        quantity: quantity || 0,
+        unitPrice: unitPrice || 0
       });
       res.status(201).json(equipment);
     } catch (e) { res.status(400).json({ error: e.message }); }
@@ -53,11 +54,11 @@ const EquipmentController = {
   async updateEquipment(req, res) {
     try {
       const { id } = req.params;
-      const { name, description, categoryId, quantity } = req.body;
+      const { name, description, categoryId, quantity, unitPrice } = req.body;
       const equipment = await Equipment.findByPk(id);
       if (!equipment) return res.status(404).json({ error: 'Equipment not found' });
 
-      await equipment.update({ name, description, EquipmentCategoryId: categoryId, quantity });
+      await equipment.update({ name, description, EquipmentCategoryId: categoryId, quantity, unitPrice });
       res.json(equipment);
     } catch (e) { res.status(400).json({ error: e.message }); }
   },
@@ -133,6 +134,7 @@ const EquipmentController = {
         EquipmentId: eq.id,
         expectedQuantity: eq.quantity,
         actualQuantity: eq.quantity, // Default to expected, user will update
+        unitPriceSnapshot: eq.unitPrice,
         condition: 'GOOD'
       }));
 
@@ -149,12 +151,12 @@ const EquipmentController = {
   async updateInventoryItem(req, res) {
     try {
       const { id } = req.params; // Item ID
-      const { actualQuantity, condition, notes } = req.body;
+      const { actualQuantity, condition, notes, unitPriceSnapshot } = req.body;
 
       const item = await EquipmentInventoryItem.findByPk(id);
       if (!item) return res.status(404).json({ error: 'Item not found' });
 
-      await item.update({ actualQuantity, condition, notes });
+      await item.update({ actualQuantity, condition, notes, unitPriceSnapshot });
       res.json(item);
     } catch (e) { res.status(400).json({ error: e.message }); }
   },
