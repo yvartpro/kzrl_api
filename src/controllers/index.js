@@ -8,6 +8,7 @@ const AuthService = require('../services/AuthService');
 const UserController = require('./UserController');
 const StoreController = require('./StoreController');
 const EquipmentController = require('./EquipmentController');
+const InventoryController = require('./InventoryController');
 const { Product, Category, Stock, Supplier, Sale, Purchase, Store, ProductComposition, Unit, sequelize } = require('../models');
 const UnitController = require('./UnitController');
 
@@ -477,5 +478,6 @@ module.exports = {
   StoreController,
   SystemController,
   EquipmentController,
-  UnitController
+  UnitController,
+  InventoryController
 };

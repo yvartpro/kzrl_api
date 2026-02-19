@@ -7,6 +7,7 @@ const { Supplier, Purchase, PurchaseItem } = require('./Purchase');
 const { Sale, SaleItem } = require('./Sale');
 const { CashRegister, CashMovement, Expense, SalaryPayment } = require('./Cash');
 const { EquipmentCategory, Equipment, EquipmentInventory, EquipmentInventoryItem } = require('./Equipment');
+const { ProductInventory, ProductInventoryItem } = require('./ProductInventory');
 const ProductComposition = require('./Composition');
 const Unit = require('./Unit');
 
@@ -58,6 +59,19 @@ EquipmentInventoryItem.belongsTo(EquipmentInventory);
 
 Equipment.hasMany(EquipmentInventoryItem);
 EquipmentInventoryItem.belongsTo(Equipment);
+
+// Product Inventories
+Store.hasMany(ProductInventory);
+ProductInventory.belongsTo(Store);
+
+User.hasMany(ProductInventory);
+ProductInventory.belongsTo(User);
+
+ProductInventory.hasMany(ProductInventoryItem);
+ProductInventoryItem.belongsTo(ProductInventory);
+
+Product.hasMany(ProductInventoryItem);
+ProductInventoryItem.belongsTo(Product);
 
 // Product & Supplier
 Supplier.hasMany(Product);
@@ -143,5 +157,6 @@ module.exports = {
   Sale, SaleItem,
   CashRegister, CashMovement, Expense, SalaryPayment,
   EquipmentCategory, Equipment, EquipmentInventory, EquipmentInventoryItem,
+  ProductInventory, ProductInventoryItem,
   ProductComposition, Unit
 };

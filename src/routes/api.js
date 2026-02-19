@@ -3,7 +3,7 @@ const router = express.Router();
 const {
   ProductController, CategoryController, PurchaseController, SaleController, ReportController,
   AuthController, UserController, SystemController, StoreController, EquipmentController,
-  UnitController
+  UnitController, InventoryController
 } = require('../controllers');
 const CashController = require('../controllers/CashController');
 const StockController = require('../controllers/StockController');
@@ -90,6 +90,13 @@ router.get('/equipment/inventories/:id', EquipmentController.getInventory);
 router.post('/equipment/inventories', authorize('ADMIN', 'MANAGER'), EquipmentController.startInventory);
 router.patch('/equipment/inventories/items/:id', authorize('ADMIN', 'MANAGER'), EquipmentController.updateInventoryItem);
 router.post('/equipment/inventories/:id/close', authorize('ADMIN', 'MANAGER'), EquipmentController.closeInventory);
+
+// Product Inventory Management
+router.get('/inventory', InventoryController.list);
+router.get('/inventory/:id', InventoryController.getOne);
+router.post('/inventory', authorize('ADMIN', 'MANAGER'), InventoryController.start);
+router.patch('/inventory/items/:id', authorize('ADMIN', 'MANAGER'), InventoryController.updateItem);
+router.post('/inventory/:id/close', authorize('ADMIN', 'MANAGER'), InventoryController.close);
 
 // System Initialization
 router.post('/system/initialize-cash', authorize('ADMIN'), SystemController.initializeCash);
