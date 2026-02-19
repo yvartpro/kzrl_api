@@ -17,8 +17,8 @@ const Product = sequelize.define('Product', {
   type: { type: DataTypes.ENUM('BAR', 'CUISINE', 'BOUTIQUE'), defaultValue: 'BOUTIQUE', allowNull: false },
   nature: { type: DataTypes.ENUM('RAW_MATERIAL', 'FINISHED_GOOD', 'SERVICE'), defaultValue: 'FINISHED_GOOD', allowNull: false },
   // Unit Logic
-  purchaseUnit: { type: DataTypes.ENUM('BOX', 'UNIT', 'KG', 'L'), defaultValue: 'UNIT', allowNull: false, comment: 'L\'unité utilisée lors de l\'achat auprès du fournisseur', },
-  baseUnit: { type: DataTypes.ENUM('UNIT', 'KG', 'G', 'L', 'ML'), defaultValue: 'UNIT', allowNull: false, comment: 'La plus petite unité vendable ou ingrédient', },
+  purchaseUnit: { type: DataTypes.STRING, defaultValue: 'UNIT', allowNull: false, comment: 'L\'unité utilisée lors de l\'achat auprès du fournisseur', },
+  baseUnit: { type: DataTypes.STRING, allowNull: true, comment: 'DEPRECATED: Use UnitId association instead', },
   unitsPerBox: { type: DataTypes.DECIMAL(10, 4), defaultValue: 1, allowNull: false, comment: 'Facteur de conversion: Combien de baseUnits dans une purchaseUnit', },
   // Pricing
   purchasePrice: { type: DataTypes.DECIMAL(10, 2), allowNull: false, comment: 'Coût d\'une unité d\'achat (par exemple, le prix d\'une boîte)', },

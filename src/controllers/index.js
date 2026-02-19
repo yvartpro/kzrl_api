@@ -60,6 +60,7 @@ const ProductController = {
           model: Category,
           required: false
         },
+        { model: Unit, required: false },
         { model: Supplier, required: false },
         {
           model: ProductComposition,
@@ -119,6 +120,7 @@ const ProductController = {
       res.status(201).json(product);
     } catch (e) {
       await transaction.rollback();
+      console.error('Product Creation Error:', e);
       res.status(400).json({ error: e.message });
     }
   },
